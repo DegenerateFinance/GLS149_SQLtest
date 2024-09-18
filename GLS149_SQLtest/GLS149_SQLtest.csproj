@@ -1,11 +1,32 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <Version>24.8.0.1</Version>
+    <SourceRevisionId>build$([System.DateTime]::UtcNow.ToString(" yyyy-MM-dd HH:mm:ss.fff"))</SourceRevisionId>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows</TargetFramework>
     <Nullable>enable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Folder Include="Dependencies\" />
+    <Folder Include="FicherosINI\" />
+    <Folder Include="Queries\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Data.Odbc" Version="8.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\DegenerateFinance\csControl\INILib\INILib.csproj" />
+    <ProjectReference Include="..\..\csControl\LogLib\LogLib.csproj" />
+  </ItemGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="xcopy  /y /d /e /i &quot;FicherosINI&quot; &quot;$(OutDir)\FicherosINI&quot;&#xD;&#xA;xcopy  /y /d /e /i &quot;Dependencies&quot; &quot;$(OutDir)\Dependencies&quot;&#xD;&#xA;xcopy  /y /d /e /i &quot;Queries&quot; &quot;$(OutDir)\Queries&quot;" />
+  </Target>
 
 </Project>
