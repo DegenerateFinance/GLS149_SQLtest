@@ -1,17 +1,30 @@
 namespace GLS149_SQLtest;
-using System.Data.Odbc;
 
 using INIGestor;
 using LogLib;
+using Insight.Database;
+using Insight.Database.Providers.Default;
 
-public partial class Form1 : Form
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Data.SqlClient;
+using System.Configuration;
+using System.Data;
+using System.Threading.Tasks;
+using System.Data.Common;
+using System.Runtime.CompilerServices;
+using System.Data.Odbc;
+
+public partial class Form2 : Form
 {
     static private IniManager? s_IniManager_Connection;
     static private IniManager? s_IniManager_Queries;
     static private LogManager? s_GeneralLogManager;
 
     static public List<string> Queries { get; set; } = new List<string>();
-    public Form1()
+    public Form2()
     {
         InitializeComponent();
     }
@@ -59,70 +72,46 @@ public partial class Form1 : Form
         // ODBC connection string
         string connectionString = $"Driver={{{driver}}};Server={server};Database={database};Uid={user};Pwd={password};";
 
-        using (OdbcConnection connection = new OdbcConnection(connectionString))
+        // Register ODBC as a database provider for Insight.Database
+        //Insight.Database.SqlInsightDbProvider.RegisterProvider();
+
+        // Create an ODBC connection
+        using (var connection = new OdbcConnection(connectionString))
         {
+            // set connection timeout
+            connection.ConnectionTimeout = 1;
             try
             {
-                // Open the connection with 1s timeout
-                connection.ConnectionTimeout = 1;
+                DateTime date = DateTime.Now;
+                // Open the connection
                 connection.Open();
-                MessageBox.Show("Connection opened successfully.");
+                int elapsed = (DateTime.Now - date).Milliseconds;
+                MessageBox.Show("Connection opened successfully in " + elapsed + " ms.");
 
-                // INSERT query example
-                string insertQuery = "INSERT INTO gls149_test.univerre (UVRTabla, UVRKeyN01, UVRTxt01, UVRNum01, UVRNum02, UVRBar01, UVRBar02) VALUES ('K10CINT149_1', 0, 'Código de barras ', 200, 222, 333, 444);";
-                using (OdbcCommand insertCommand = new OdbcCommand(insertQuery, connection))
-                {
-                    insertCommand.Parameters.AddWithValue("Column1", "Value1");
-                    insertCommand.Parameters.AddWithValue("Column2", "Value2");
-                    try
-                    {
-                        int rowsAffected = insertCommand.ExecuteNonQuery();
-                        MessageBox.Show($"Rows inserted: {rowsAffected}");
-                    }
-                    catch (Exception ex)
-                    {
-                        MessageBox.Show($"INSERT Error: {ex.Message}");
-                    }
-                }
+                // Example 1: INSERT query using Insight.Database
+                var insertQuery = $"INSERT INTO {WangOrm2.GetTableName(typeof(TableUniverre))} ({WangOrm2.GetColumnName(typeof(TableUniverre), nameof(TableUniverre.UVRTabla))}, UVRKeyN01, UVRTxt01, UVRNum01, UVRNum02, UVRBar01, UVRBar02) VALUES ('K10CINT149_1', 0, 'Código de barras ', 200, 222, 333, 444);";
+                var parameters = new { Column1 = "Value1", Column2 = "Value2" };
+                //connection.ExecuteSql(insertQuery, parameters);
 
-                // SELECT query example
-                string selectQuery = "SELECT * FROM gls149_test.univerre WHERE UVRTabla = 'K10CINT149_1' AND UVRKeyN01 = 0 LIMIT 50;";
+
+                // Example 2: SELECT query using Insight.Database
+                var selectQuery = $"SELECT " +
+                    $"{WangOrm2.GetColumnName(typeof(TableUniverre), nameof(TableUniverre.UVRTabla))}, " +
+                    $"{WangOrm2.GetColumnName(typeof(TableUniverre), nameof(TableUniverre.UVRKeyN01))} " +
+                    $"FROM " +
+                    $"{WangOrm2.GetTableName(typeof(TableUniverre))} " +
+                    $"WHERE {WangOrm2.GetColumnName(typeof(TableUniverre), nameof(TableUniverre.UVRTabla))} = @UVRTabla AND " +
+                    $"{WangOrm2.GetColumnName(typeof(TableUniverre), nameof(TableUniverre.UVRKeyN01))} = @UVRKeyN01";
 
                 try
                 {
-                    
-                    using (OdbcCommand selectCommand = new OdbcCommand(selectQuery, connection))
-                    {
-                        selectCommand.Parameters.AddWithValue("Column1", "Value1");
-                        // Execute the command with 1s timeout
-                        selectCommand.CommandTimeout = 1;
-                        using (OdbcDataReader reader = selectCommand.ExecuteReader())
-                        {
-                            while (reader.Read())
-                            {
-                                string result = "";
-                                // get number of columns
-                                int columns = reader.FieldCount;
-                                for (int i = 0; i < columns; i++)
-                                {
-                                    result += $"Column {i}: ";
-                                    result += ODBCReaderToString(reader, i);
-                                }
-                                MessageBox.Show(result);
-                            }
-                        }
-                    }
-                }
-                catch (TimeoutException ex)
-                {
-                    MessageBox.Show($"SELECT Timeout: {ex.Message}");
+                    var result = connection.QuerySql<TableUniverre>(selectQuery, new { UVRTabla = "K10CINT149_1", UVRKeyN01 = 0 });
+
                 }
                 catch (Exception ex)
                 {
                     MessageBox.Show($"SELECT Error: {ex.Message}");
                 }
-                
-
             }
             catch (Exception ex)
             {
@@ -138,6 +127,8 @@ public partial class Form1 : Form
                 }
             }
         }
+
+
     }
 
     private void Form1_FormClosing(object sender, FormClosingEventArgs e)

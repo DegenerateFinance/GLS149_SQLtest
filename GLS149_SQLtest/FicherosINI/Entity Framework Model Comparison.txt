@@ -1,0 +1,28 @@
+Entity Framework Model Comparison
+
+-- With Compiled models:
+
+First
+Connection(ms): 185, 188, 
+INSERT(ms): 108, 
+SELECT(ms): 177
+
+
+Second:
+Connection(ms): 1, 0, 
+INSERT(ms): 5, 4, 
+SELECT(ms): 6, 6
+
+
+-- NO Compiled models:
+
+First
+Connection(ms): 166, 166, 
+INSERT(ms): 105, 
+SELECT(ms): 171
+
+
+Second:
+Connection(ms): 1, 0, 0
+INSERT(ms): 11, 10, 8
+SELECT(ms): 8, 5, 5

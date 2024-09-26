@@ -21,6 +21,9 @@ VALUES
 444);
 
 SELECT * FROM gls149_test.univerre WHERE UVRTabla = 'K10CINT149_1' AND UVRKeyN01 = 0 LIMIT 50;
+SELECT * FROM gls149_test.univerre LIMIT 50;
+
+SELECT UVRTabla, UVRKeyN01 FROM gls149_test.Univerre WHERE UVRTabla = 'K10CINT149_1' AND UVRKeyN01 = 0;
 
 DELETE FROM gls149_test.univerre WHERE 
 UVRTabla= 'K10CINT149_1' AND
