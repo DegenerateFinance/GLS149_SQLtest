@@ -13,7 +13,6 @@
   <ItemGroup>
     <Folder Include="Dependencies\" />
     <Folder Include="FicherosINI\" />
-    <Folder Include="MyCompiledModels\" />
     <Folder Include="Queries\" />
   </ItemGroup>
 
@@ -42,9 +41,6 @@
 
   <ItemGroup>
     <Compile Update="Form3.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Update="Form2.cs">
       <SubType>Form</SubType>
     </Compile>
   </ItemGroup>

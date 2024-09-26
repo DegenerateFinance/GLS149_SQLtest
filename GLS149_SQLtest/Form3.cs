@@ -14,6 +14,9 @@ using GLS149_SQLtest.Models;
 using MySqlConnector;
 using System.Data.SqlClient;
 using Microsoft.Data.SqlClient;
+using Microsoft.Identity.Client.NativeInterop;
+using Microsoft.Win32;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 public partial class Form3 : Form
 {
@@ -67,14 +70,21 @@ public partial class Form3 : Form
         string password = TbPassword.Text;
 
 
-        //string connectionString = $"Server={server};Database={database};User Id={user};Password={password};TrustServerCertificate=True;Encrypt=False;";
 
-        string connectionString = $"Server={server};Database={database};User Id={user};Password={password};TrustServerCertificate=True;Encrypt=False;";
+        string connectionString = "";
 
         Gls149TestContext.ConectionTypeEnum ConectionTypeEnum = CbDbEngine.SelectedIndex == 0 ? Gls149TestContext.ConectionTypeEnum.MySQL : Gls149TestContext.ConectionTypeEnum.SQLServer;
 
+        if (ConectionTypeEnum == Gls149TestContext.ConectionTypeEnum.SQLServer)
+        {
+            connectionString = $"Server={server};Database={database};User Id={user};Password={password}; TrustServerCertificate=True; Encrypt=False;";
+        }
+        else if (ConectionTypeEnum == Gls149TestContext.ConectionTypeEnum.MySQL)
+        {
+            connectionString = $"Server={server};Database={database};User Id={user};Password={password};";
+        }
 
-        using (var context = new Gls149TestContext( new DbContextOptions<Gls149TestContext>()))
+        using (var context = new Gls149TestContext(new DbContextOptions<Gls149TestContext>()))
         {
             context.SetConnectionType(connectionString, ConectionTypeEnum);
             // connection timeout
@@ -126,13 +136,18 @@ public partial class Form3 : Form
 
     private void Form1_FormClosing(object sender, FormClosingEventArgs e)
     {
-        s_IniManager_Connection?.SetValue("GENERAL", "Driver", CbDbEngine.SelectedIndex == 0 ? "MySQl":"SQLServer");
+        s_IniManager_Connection?.SetValue("GENERAL", "Driver", CbDbEngine.SelectedIndex == 0 ? "MySQl" : "SQLServer");
         s_IniManager_Connection?.SetValue("GENERAL", "Server", TbServer.Text);
         s_IniManager_Connection?.SetValue("GENERAL", "Database", TbDatabase.Text);
         s_IniManager_Connection?.SetValue("GENERAL", "User", TbUser.Text);
         s_IniManager_Connection?.SetValue("GENERAL", "Password", TbPassword.Text);
 
         s_GeneralLogManager?.FinalizeLogManager();
+    }
+
+    private void BtnQuery_Click(object sender, EventArgs e)
+    {
+        //MessageBox.Show(CQueryTester.GenerateRabdomCb(13, false));
     }
 }
 

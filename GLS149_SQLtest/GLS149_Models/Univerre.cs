@@ -9,7 +9,7 @@ public partial class Univerre
 
     public int UVRKeyN01 { get; set; }
 
-    public int UvrkeyN02 { get; set; }
+    public int UVRKeyN02 { get; set; }
 
     public string UvrkeyC01 { get; set; } = null!;
 

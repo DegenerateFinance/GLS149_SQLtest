@@ -39,11 +39,13 @@
             TbPassword = new TextBox();
             LblDbEngine = new Label();
             CbDbEngine = new ComboBox();
+            CbConnection = new CheckBox();
+            BtnQuery = new Button();
             SuspendLayout();
             // 
             // BtnConnect
             // 
-            BtnConnect.Location = new Point(148, 242);
+            BtnConnect.Location = new Point(99, 230);
             BtnConnect.Name = "BtnConnect";
             BtnConnect.Size = new Size(193, 64);
             BtnConnect.TabIndex = 0;
@@ -137,11 +139,33 @@
             CbDbEngine.Size = new Size(121, 23);
             CbDbEngine.TabIndex = 11;
             // 
+            // CbConnection
+            // 
+            CbConnection.AutoSize = true;
+            CbConnection.Location = new Point(305, 254);
+            CbConnection.Name = "CbConnection";
+            CbConnection.Size = new Size(84, 19);
+            CbConnection.TabIndex = 12;
+            CbConnection.Text = "Connected";
+            CbConnection.UseVisualStyleBackColor = true;
+            // 
+            // BtnQuery
+            // 
+            BtnQuery.Location = new Point(99, 350);
+            BtnQuery.Name = "BtnQuery";
+            BtnQuery.Size = new Size(193, 55);
+            BtnQuery.TabIndex = 13;
+            BtnQuery.Text = "Query";
+            BtnQuery.UseVisualStyleBackColor = true;
+            BtnQuery.Click += BtnQuery_Click;
+            // 
             // Form3
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(694, 523);
+            Controls.Add(BtnQuery);
+            Controls.Add(CbConnection);
             Controls.Add(CbDbEngine);
             Controls.Add(LblDbEngine);
             Controls.Add(TbPassword);
@@ -174,5 +198,7 @@
         private TextBox TbPassword;
         private Label LblDbEngine;
         private ComboBox CbDbEngine;
+        private CheckBox CbConnection;
+        private Button BtnQuery;
     }
 }

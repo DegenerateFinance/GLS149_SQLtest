@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Configuration;
-using MyCompiledModels;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
@@ -25,6 +24,11 @@ public partial class Gls149TestContext : DbContext
         : base(options)
     {
     }
+    public Gls149TestContext(string connectionstring, ConectionTypeEnum conectionTypeEnum)
+    {
+        _connectionString = connectionstring;
+        _conectionTypeEnum = conectionTypeEnum;
+    }
     public void SetConnectionType(string connectionstring, ConectionTypeEnum conectionTypeEnum)
     {
         _connectionString = connectionstring;
@@ -36,7 +40,7 @@ public partial class Gls149TestContext : DbContext
     {
         modelBuilder.Entity<Univerre>(entity =>
         {
-            entity.HasKey(e => new { e.UVRTabla, e.UVRKeyN01, e.UvrkeyN02, e.UvrkeyC01, e.UvrkeyC02 }).HasName("PRIMARY");
+            entity.HasKey(e => new { e.UVRTabla, e.UVRKeyN01, e.UVRKeyN02, e.UvrkeyC01, e.UvrkeyC02 }).HasName("PRIMARY");
 
             entity.ToTable("univerre");
 
@@ -45,7 +49,7 @@ public partial class Gls149TestContext : DbContext
                 .IsFixedLength()
                 .HasColumnName("UVRTabla");
             entity.Property(e => e.UVRKeyN01).HasColumnName("UVRKeyN01");
-            entity.Property(e => e.UvrkeyN02).HasColumnName("UVRKeyN02");
+            entity.Property(e => e.UVRKeyN02).HasColumnName("UVRKeyN02");
             entity.Property(e => e.UvrkeyC01)
                 .HasMaxLength(30)
                 .HasDefaultValueSql("''")
@@ -89,8 +93,6 @@ public partial class Gls149TestContext : DbContext
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        optionsBuilder.EnableServiceProviderCaching(false);
-        //optionsBuilder.UseModel(Gls149TestContextModel.Instance);
         if (_conectionTypeEnum == ConectionTypeEnum.MySQL)
         {
             if (!optionsBuilder.IsConfigured)
