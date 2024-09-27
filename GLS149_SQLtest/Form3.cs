@@ -17,6 +17,7 @@ using Microsoft.Data.SqlClient;
 using Microsoft.Identity.Client.NativeInterop;
 using Microsoft.Win32;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 public partial class Form3 : Form
 {
@@ -42,9 +43,11 @@ public partial class Form3 : Form
             TbPassword.Text = s_IniManager_Connection.GetString("GENERAL", "Password", "root", ref sectionsError);
 
             s_IniManager_Queries = new IniManager("FicherosINI//Queries.ini");
-            string logFile = s_IniManager_Queries.GetString("GENERAL", "ArchivoLog", "logs", ref sectionsError);
+            string logFile = s_IniManager_Queries.GetString("GENERAL", "ArchivoLog", "log", ref sectionsError);
             string logDir = s_IniManager_Queries.GetString("GENERAL", "DirectorioLog", "Logs", ref sectionsError);
-            s_GeneralLogManager = new LogManager(logDir, logFile, 69);
+            s_GeneralLogManager = new LogManager(logFile, logDir, 69);
+
+            CQueryTester.Initialize("FicherosINI//Queries.ini", ref sectionsError);
 
             if (sectionsError.Count > 0)
             {
@@ -56,9 +59,9 @@ public partial class Form3 : Form
                 MessageBox.Show(error);
             }
         }
-        catch
+        catch (Exception ex)
         {
-
+            MessageBox.Show("Error loading the form: " + ex.Message);
         }
     }
 
@@ -83,57 +86,28 @@ public partial class Form3 : Form
         {
             connectionString = $"Server={server};Database={database};User Id={user};Password={password};";
         }
-
-        using (var context = new Gls149TestContext(new DbContextOptions<Gls149TestContext>()))
+        if (!CQueryTester.Connect(connectionString, ConectionTypeEnum))
         {
-            context.SetConnectionType(connectionString, ConectionTypeEnum);
-            // connection timeout
-            context.Database.SetCommandTimeout(1);
-
-            #region InsightConnection
-            try
-            {
-                DateTime delete = DateTime.Now;
-                // delete where UVRTabla = "K10CINT149_1", UVRKeyN01 = 0
-                var dels = context.Univerres.Where(u => u.UVRTabla == "K10CINT149_1" && u.UVRKeyN01 == 0).ToList();
-                foreach (var univerre in dels)
-                {
-                    context.Univerres.Remove(univerre);
-                }
-                context.SaveChanges();
-
-                MessageBox.Show("Delete successful in " + (DateTime.Now - delete).TotalMilliseconds + " milliseconds");
-
-                DateTime query = DateTime.Now;
-                var newEntity = new Univerre { UVRTabla = "K10CINT149_1", UVRKeyN01 = 0, UVRTxt01 = "Código de barras", UVRNum01 = 200, UVRNum02 = 222, UVRBar01 = 333, UVRBar02 = 444 };
-                context.Univerres.Add(newEntity);
-                context.SaveChanges();
-                MessageBox.Show("INSERT successful in " + (DateTime.Now - query).TotalMilliseconds + " milliseconds");
-            }
-            catch (DbUpdateException dbEx)
-            {
-                var sqlException = dbEx.InnerException as Exception;  // Or SqlException for SQL Server
-                //var sqlException = dbEx.InnerException as MySqlException;// MySqlException for MySQL
-                if (sqlException != null)
-                {
-                    MessageBox.Show("SQL Error: " + sqlException.Message);
-                }
-                else
-                {
-                    MessageBox.Show("An error occurred: " + dbEx.Message);
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("General error: " + ex.Message);
-            }
-
-
-            #endregion InsightConnection
-
+            MessageBox.Show("Error connecting to the database");
+            return;
         }
+        if (!CQueryTester.IsConnected())
+        {
+            MessageBox.Show("Error connecting to the database");
+            return;
+        }
+        MessageBox.Show("Connection successful");
     }
-
+    private void BtnQuery_Click(object sender, EventArgs e)
+    {
+        if (!CQueryTester.IsConnected())
+        {
+            MessageBox.Show("Not connected to the database");
+            return;
+        }
+        CQueryTester.RunLoadedQueries();
+        MessageBox.Show("Query executed successfully. See Outs/out");
+    }
     private void Form1_FormClosing(object sender, FormClosingEventArgs e)
     {
         s_IniManager_Connection?.SetValue("GENERAL", "Driver", CbDbEngine.SelectedIndex == 0 ? "MySQl" : "SQLServer");
@@ -143,11 +117,7 @@ public partial class Form3 : Form
         s_IniManager_Connection?.SetValue("GENERAL", "Password", TbPassword.Text);
 
         s_GeneralLogManager?.FinalizeLogManager();
-    }
-
-    private void BtnQuery_Click(object sender, EventArgs e)
-    {
-        //MessageBox.Show(CQueryTester.GenerateRabdomCb(13, false));
+        CQueryTester.FinalizeQueryTester();
     }
 }
 

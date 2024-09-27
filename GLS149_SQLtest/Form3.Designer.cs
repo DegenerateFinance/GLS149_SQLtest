@@ -39,7 +39,6 @@
             TbPassword = new TextBox();
             LblDbEngine = new Label();
             CbDbEngine = new ComboBox();
-            CbConnection = new CheckBox();
             BtnQuery = new Button();
             SuspendLayout();
             // 
@@ -139,23 +138,13 @@
             CbDbEngine.Size = new Size(121, 23);
             CbDbEngine.TabIndex = 11;
             // 
-            // CbConnection
-            // 
-            CbConnection.AutoSize = true;
-            CbConnection.Location = new Point(305, 254);
-            CbConnection.Name = "CbConnection";
-            CbConnection.Size = new Size(84, 19);
-            CbConnection.TabIndex = 12;
-            CbConnection.Text = "Connected";
-            CbConnection.UseVisualStyleBackColor = true;
-            // 
             // BtnQuery
             // 
             BtnQuery.Location = new Point(99, 350);
             BtnQuery.Name = "BtnQuery";
             BtnQuery.Size = new Size(193, 55);
             BtnQuery.TabIndex = 13;
-            BtnQuery.Text = "Query";
+            BtnQuery.Text = "Run Queries";
             BtnQuery.UseVisualStyleBackColor = true;
             BtnQuery.Click += BtnQuery_Click;
             // 
@@ -165,7 +154,6 @@
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(694, 523);
             Controls.Add(BtnQuery);
-            Controls.Add(CbConnection);
             Controls.Add(CbDbEngine);
             Controls.Add(LblDbEngine);
             Controls.Add(TbPassword);
@@ -198,7 +186,6 @@
         private TextBox TbPassword;
         private Label LblDbEngine;
         private ComboBox CbDbEngine;
-        private CheckBox CbConnection;
         private Button BtnQuery;
     }
 }
