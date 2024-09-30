@@ -2,23 +2,12 @@ namespace GLS149_SQLtest;
 
 using INIGestor;
 using LogLib;
-using Insight.Database;
-using Insight.Database.Providers.Default;
+using System.Diagnostics;
 
 using System;
 using System.Collections.Generic;
-using System.Configuration;
 
-using Microsoft.EntityFrameworkCore;
 using GLS149_SQLtest.Models;
-using MySqlConnector;
-using System.Data.SqlClient;
-using Microsoft.Data.SqlClient;
-using Microsoft.Identity.Client.NativeInterop;
-using Microsoft.Win32;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement;
-using static System.Runtime.InteropServices.JavaScript.JSType;
-
 public partial class Form3 : Form
 {
     static private IniManager? s_IniManager_Connection;
@@ -35,19 +24,21 @@ public partial class Form3 : Form
         try
         {
             List<string> sectionsError = new List<string>();
-            s_IniManager_Connection = new IniManager("FicherosINI//SQLConn.ini");
+            string sqlconnINI = "FicherosINI//SQLConn.ini";
+            s_IniManager_Connection = new IniManager(sqlconnINI);
             CbDbEngine.SelectedIndex = s_IniManager_Connection.GetString("GENERAL", "Driver", "MySQL", ref sectionsError).Contains("MySQL", StringComparison.InvariantCultureIgnoreCase) ? 0 : 1;
             TbServer.Text = s_IniManager_Connection.GetString("GENERAL", "Server", "localhost", ref sectionsError);
             TbDatabase.Text = s_IniManager_Connection.GetString("GENERAL", "Database", "gls149_test", ref sectionsError);
             TbUser.Text = s_IniManager_Connection.GetString("GENERAL", "User", "root", ref sectionsError);
             TbPassword.Text = s_IniManager_Connection.GetString("GENERAL", "Password", "root", ref sectionsError);
 
-            s_IniManager_Queries = new IniManager("FicherosINI//Queries.ini");
+            string queriesINI = "FicherosINI//Queries.ini";
+            s_IniManager_Queries = new IniManager(queriesINI);
             string logFile = s_IniManager_Queries.GetString("GENERAL", "ArchivoLog", "log", ref sectionsError);
             string logDir = s_IniManager_Queries.GetString("GENERAL", "DirectorioLog", "Logs", ref sectionsError);
             s_GeneralLogManager = new LogManager(logFile, logDir, 69);
 
-            CQueryTester.Initialize("FicherosINI//Queries.ini", ref sectionsError);
+            CQueryTester.Initialize(queriesINI, ref sectionsError);
 
             if (sectionsError.Count > 0)
             {
@@ -118,6 +109,16 @@ public partial class Form3 : Form
 
         s_GeneralLogManager?.FinalizeLogManager();
         CQueryTester.FinalizeQueryTester();
+    }
+
+    private void BtnOpenOurFolder_Click(object sender, EventArgs e)
+    {
+        if (CQueryTester.s_QueriesOutLogManager?.LogFullPath is not string p)
+        {
+            MessageBox.Show("No Path");
+            return;
+        }
+        Process.Start("explorer.exe", p);
     }
 }
 

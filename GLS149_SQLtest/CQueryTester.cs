@@ -16,6 +16,7 @@ using System.Threading;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 using static GLS149_SQLtest.CQueryTester.Query;
 using static System.Windows.Forms.AxHost;
+using Microsoft.EntityFrameworkCore.Query.Internal;
 
 namespace GLS149_SQLtest;
 
@@ -23,7 +24,7 @@ public class CQueryTester
 {
     static public string logDir = "Logs/Outs";
     static public string logFile = "out";
-    static private LogManager? s_QueriesOutLogManager;
+    static public LogManager? s_QueriesOutLogManager { get; private set; }
     static public Gls149TestContext? s_Context;
     static private string s_ConnectionString = "";
     static private Gls149TestContext.ConectionTypeEnum s_ConectionTypeEnum;
@@ -95,16 +96,25 @@ public class CQueryTester
             s_Context?.Database.SetCommandTimeout(1);
             s_Context?.Database.EnsureCreated();
             s_Context?.Database.OpenConnection();
+            if (s_Context == null)
+            {
+                s_QueriesOutLogManager?.AddEntry("Context is null");
+                return false;
+            }
+            if (s_Context.Database.CanConnect())
+            {
+                s_QueriesOutLogManager?.AddEntry("Connected to database");
+            }
             DateTime start = DateTime.Now;
-            if (SyncSELECTandDELETEMode() < -1)
+            int chute = SyncSELECTandDELETEchute();
+            if (chute < -1)
             {
                 s_QueriesOutLogManager?.AddEntry("Connect error: No response from database");
                 return false;
             }
-            if (SyncSELECTandDELETEchute() < -1)
+            else
             {
-                s_QueriesOutLogManager?.AddEntry("Connect error: No response from database");
-                return false;
+                s_QueriesOutLogManager?.AddEntry("Chute: " + chute);
             }
             s_QueriesOutLogManager?.AddEntry("Connect time: " + (DateTime.Now - start).TotalMilliseconds + " ms");
         }
@@ -222,8 +232,8 @@ public class CQueryTester
             }
             else if (q.QType == QueryTypeEnum.SELECTandDELETEMode)
             {
-                threads.Add(new Thread(() => SELECTandDELETEModeThread(q.Id)));
-                threads[threads.Count - 1].Start();
+                //threads.Add(new Thread(() => SELECTandDELETEModeThread(q.Id)));
+                //threads[threads.Count - 1].Start();
             }
             else if (q.QType == QueryTypeEnum.SELECTandDELETEchute)
             {
@@ -285,8 +295,19 @@ public class CQueryTester
             };
             try
             {
-                context?.Univerres.Add(univerre);
-                context?.SaveChanges();
+                // Raw Insert
+                //context?.Univerres.Add(univerre);
+                //context?.SaveChanges();
+
+                // With Procedure
+                int? result = 0;
+                string query = $"EXEC K10AltaCinta @cinta='K10CINT149_1', @CodigoBarras={barcode}, @PesoGramos={pesoGramos}, @Xcms={largoCM}, @Ycms={anchoCM}, @Zcms={altoCM}";
+                result =context?.Database.ExecuteSqlRaw(query);
+                if (result == null)
+                {
+                    s_QueriesOutLogManager?.AddEntry("INSERT Parcel Data error: No response from database");
+                    return -3;
+                }
             }
             catch (Exception ex)
             {
@@ -318,63 +339,64 @@ public class CQueryTester
         s_Queries[query_id].Result = result;
     }
 
+    // Eliminado. No hace Nada
     // 2. Registro que graba GLS#149. Para parar la cinta, encenderla en modo carga o descarga.
-    static public int SyncSELECTandDELETEMode()
-    {
-        //  Registro que graba GLS#149. Para parar la cinta, encenderla en modo carga o descarga.
-        //  UVRTabla = K10CINT149_1
-        //  UVRKeyN01 = 1
-        //  UVRKeyN02 = 0 / 1 / 2(0 = STOP, 1 = ON modo carga, 2 = ON modo descarga)
-        //  UVRKeyN02 puede valer 0(para la cinta), 1(encenderla en modo carga) o 2(encenderla en modo descarga)
-        //use new context
-        using (Gls149TestContext context = new Gls149TestContext(s_ConnectionString, s_ConectionTypeEnum))
-        {
+    //static public int SyncSELECTandDELETEMode()
+    //{
+    //    //  Registro que graba GLS#149. Para parar la cinta, encenderla en modo carga o descarga.
+    //    //  UVRTabla = K10CINT149_1
+    //    //  UVRKeyN01 = 1
+    //    //  UVRKeyN02 = 0 / 1 / 2(0 = STOP, 1 = ON modo carga, 2 = ON modo descarga)
+    //    //  UVRKeyN02 puede valer 0(para la cinta), 1(encenderla en modo carga) o 2(encenderla en modo descarga)
+    //    //use new context
+    //    using (Gls149TestContext context = new Gls149TestContext(s_ConnectionString, s_ConectionTypeEnum))
+    //    {
 
-            int mode = -1;
-            try
-            {
-                var univerre = context?.Univerres.Where(u => u.UVRTabla == "K10CINT149_1" && u.UVRKeyN01 == 1).FirstOrDefault();
-                if (univerre != null)
-                {
-                    mode = univerre.UVRKeyN02;
-                    context?.Univerres.Remove(univerre);
-                    context?.SaveChanges();
-                }
-                return mode;
-            }
-            catch (Exception ex)
-            {
-                if (ex.InnerException != null)
-                {
-                    s_QueriesOutLogManager?.AddEntry("SELECT and DELETE Mode exception: " + ex.InnerException.Message);
-                }
-                else
-                {
-                    s_QueriesOutLogManager?.AddEntry("SELECT and DELETE Mode exception: " + ex.Message);
-                }
-            }
-        }
+    //        int mode = -1;
+    //        try
+    //        {
+    //            var univerre = context?.Univerres.Where(u => u.UVRTabla == "K10CINT149_1" && u.UVRKeyN01 == 1).FirstOrDefault();
+    //            if (univerre != null)
+    //            {
+    //                mode = univerre.UVRKeyN02;
+    //                context?.Univerres.Remove(univerre);
+    //                context?.SaveChanges();
+    //            }
+    //            return mode;
+    //        }
+    //        catch (Exception ex)
+    //        {
+    //            if (ex.InnerException != null)
+    //            {
+    //                s_QueriesOutLogManager?.AddEntry("SELECT and DELETE Mode exception: " + ex.InnerException.Message);
+    //            }
+    //            else
+    //            {
+    //                s_QueriesOutLogManager?.AddEntry("SELECT and DELETE Mode exception: " + ex.Message);
+    //            }
+    //        }
+    //    }
 
-        return -3;
-    }
-    static private void SELECTandDELETEModeThread(int query_id)
-    {
-        s_Queries[query_id].StartQuery();
-        DateTime start = DateTime.Now;
-        int result = -1;
-        while (result == -1)
-        {
-            result = SyncSELECTandDELETEMode();
-            if (s_Queries[query_id].TimeOut < DateTime.Now)
-            {
-                s_Queries[query_id].Result = -2;
-                s_Queries[query_id].MsTimeTaken = (int)(DateTime.Now - start).TotalMilliseconds;
-                return;
-            }
-        }
-        s_Queries[query_id].MsTimeTaken = (int)(DateTime.Now - start).TotalMilliseconds;
-        s_Queries[query_id].Result = result;
-    }
+    //    return -3;
+    //}
+    //static private void SELECTandDELETEModeThread(int query_id)
+    //{
+    //    s_Queries[query_id].StartQuery();
+    //    DateTime start = DateTime.Now;
+    //    int result = -1;
+    //    while (result == -1)
+    //    {
+    //        result = SyncSELECTandDELETEMode();
+    //        if (s_Queries[query_id].TimeOut < DateTime.Now)
+    //        {
+    //            s_Queries[query_id].Result = -2;
+    //            s_Queries[query_id].MsTimeTaken = (int)(DateTime.Now - start).TotalMilliseconds;
+    //            return;
+    //        }
+    //    }
+    //    s_Queries[query_id].MsTimeTaken = (int)(DateTime.Now - start).TotalMilliseconds;
+    //    s_Queries[query_id].Result = result;
+    //}
 
     // 3. Registro que graba GLS#149. Para decir porque carril debe desviar el paquete que acaba de leer.
     static public int SyncSELECTandDELETEchute()
@@ -390,13 +412,29 @@ public class CQueryTester
             int lane = -1;
             try
             {
-                var univerre = context?.Univerres.Where(u => u.UVRTabla == "K10CINT149_1" && u.UVRKeyN01 == 2).FirstOrDefault();
-                if (univerre != null)
+                // Raw Select and Delete
+                //var univerre = context?.Univerres.Where(u => u.UVRTabla == "K10CINT149_1" && u.UVRKeyN01 == 2).FirstOrDefault();
+                //if (univerre != null)
+                //{
+                //    lane = univerre.UVRKeyN02;
+                //    context?.Univerres.Remove(univerre);
+                //    context?.SaveChanges();
+                //}
+
+                // With Procedure
+                string query = $"EXEC K10Obtienecarril @cinta='K10CINT149_1'";
+                List<Univerre>? res = context?.Univerres.FromSqlRaw(query).ToList();
+                if (res == null)
                 {
-                    lane = univerre.UVRKeyN02;
-                    context?.Univerres.Remove(univerre);
-                    context?.SaveChanges();
+                    return -3;
                 }
+                if (res.Count > 0)
+                {
+                    lane = res[0].UVRKeyN02;
+                    string query2 = $"EXEC K10BorraCarril @cinta='K10CINT149_1'";
+                    int? result = context?.Database.ExecuteSqlRaw(query2);
+                }
+
                 return lane;
             }
             catch (Exception ex)
@@ -454,8 +492,20 @@ public class CQueryTester
             };
             try
             {
-                context?.Univerres.Add(univerre);
-                context?.SaveChanges();
+                // With Procedure
+                int? result = 0;
+                string query = $"EXEC K10AltaCarrilSaturado @cinta='K10CINT149_1', @CodigoBarras={barcode}, @CarrilSaturado={chute}";
+                result = context?.Database.ExecuteSqlRaw(query);
+                if (result == null)
+                {
+                    s_QueriesOutLogManager?.AddEntry("INSERT Parcel Data error: No response from database");
+                    return -3;
+                }
+
+                // Raw Insert
+                //context?.Univerres.Add(univerre);
+                //context?.SaveChanges();
+
                 return 0;
             }
             catch (Exception ex)

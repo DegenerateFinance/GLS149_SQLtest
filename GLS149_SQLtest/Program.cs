@@ -18,3 +18,5 @@ internal static class Program
 // dotnet ef dbcontext optimize --context Gls149TestContext --project GLS149_SQLtest --startup-project GLS149_SQLtest --output-dir MyCompiledModels --namespace MyCompiledModels
 
 // Scaffold-DbContext  "server=192.168.2.69;database=gls149_test;user=remote;password=remote;" Pomelo.EntityFrameworkCore.MySql -OutputDir MyScaffoldedModels -f
+
+// Scaffold-DbContext  "server=192.168.2.69;database=gls149_test;user=remote;password=remote;TrustServerCertificate=True;Encrypt=False;" Microsoft.EntityFrameworkCore.SqlServer -OutputDir MyScaffoldedModels -f

@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <Version>24.8.0.1</Version>
+    <Version>24.8.0.2</Version>
     <SourceRevisionId>build$([System.DateTime]::UtcNow.ToString(" yyyy-MM-dd HH:mm:ss.fff"))</SourceRevisionId>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows</TargetFramework>
@@ -17,8 +17,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Insight.Database" Version="8.0.1" />
-    <PackageReference Include="Insight.Database.Providers.Default" Version="8.0.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.8" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.8">
       <PrivateAssets>all</PrivateAssets>
@@ -31,18 +29,21 @@
     </PackageReference>
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.0" />
     <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="8.0.2" />
-    <PackageReference Include="System.Data.Odbc" Version="8.0.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\DegenerateFinance\csControl\INILib\INILib.csproj" />
-    <ProjectReference Include="..\..\csControl\LogLib\LogLib.csproj" />
+    <ProjectReference Include="..\INILib\INILib.csproj" />
+    <ProjectReference Include="..\LogLib\LogLib.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <Compile Update="Form3.cs">
       <SubType>Form</SubType>
     </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">

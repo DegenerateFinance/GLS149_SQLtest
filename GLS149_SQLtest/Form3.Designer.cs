@@ -40,6 +40,7 @@
             LblDbEngine = new Label();
             CbDbEngine = new ComboBox();
             BtnQuery = new Button();
+            BtnOpenOurFolder = new Button();
             SuspendLayout();
             // 
             // BtnConnect
@@ -148,11 +149,22 @@
             BtnQuery.UseVisualStyleBackColor = true;
             BtnQuery.Click += BtnQuery_Click;
             // 
+            // BtnOpenOurFolder
+            // 
+            BtnOpenOurFolder.Location = new Point(366, 350);
+            BtnOpenOurFolder.Name = "BtnOpenOurFolder";
+            BtnOpenOurFolder.Size = new Size(193, 55);
+            BtnOpenOurFolder.TabIndex = 14;
+            BtnOpenOurFolder.Text = "Open Out Folder";
+            BtnOpenOurFolder.UseVisualStyleBackColor = true;
+            BtnOpenOurFolder.Click += BtnOpenOurFolder_Click;
+            // 
             // Form3
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(694, 523);
+            Controls.Add(BtnOpenOurFolder);
             Controls.Add(BtnQuery);
             Controls.Add(CbDbEngine);
             Controls.Add(LblDbEngine);
@@ -187,5 +199,6 @@
         private Label LblDbEngine;
         private ComboBox CbDbEngine;
         private Button BtnQuery;
+        private Button BtnOpenOurFolder;
     }
 }
