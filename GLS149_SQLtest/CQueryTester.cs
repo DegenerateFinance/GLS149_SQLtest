@@ -15,8 +15,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Threading;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 using static GLS149_SQLtest.CQueryTester.Query;
-using static System.Windows.Forms.AxHost;
-using Microsoft.EntityFrameworkCore.Query.Internal;
+using System.Data.Odbc;
 
 namespace GLS149_SQLtest;
 
@@ -26,8 +25,16 @@ public class CQueryTester
     static public string logFile = "out";
     static public LogManager? s_QueriesOutLogManager { get; private set; }
     static public Gls149TestContext? s_Context;
+    static public OdbcConnection? s_OdbcConnection { get; private set; }
     static private string s_ConnectionString = "";
-    static private Gls149TestContext.ConectionTypeEnum s_ConectionTypeEnum;
+    static private ConectionTypeEnum s_ConectionTypeEnum;
+    public enum ConectionTypeEnum
+    {
+        NotSelected = -1,
+        MySQL = 0,
+        SQLServer = 1,
+        ODBC = 2
+    }
 
     static public List<Query> s_Queries = new List<Query>();
     public class Query
@@ -84,8 +91,38 @@ public class CQueryTester
         }
     }
 
-    static public bool Connect(string connectionString, Gls149TestContext.ConectionTypeEnum conectionTypeEnum)
+    static public bool Connect(string connectionString, ConectionTypeEnum conectionTypeEnum)
     {
+        s_ConectionTypeEnum = conectionTypeEnum;
+        s_ConnectionString = connectionString;
+        if (conectionTypeEnum == ConectionTypeEnum.ODBC)
+        {
+            s_OdbcConnection = new OdbcConnection(connectionString);
+            try
+            {
+                s_OdbcConnection?.Open();
+                if (s_OdbcConnection == null)
+                {
+                    s_QueriesOutLogManager?.AddEntry("Connect error: No response from database");
+                    return false;
+                }
+                s_QueriesOutLogManager?.AddEntry("Connected to database");
+            }
+            catch (Exception ex)
+            {
+                if (ex.InnerException != null)
+                {
+                    s_QueriesOutLogManager?.AddEntry("Connect exception: " + ex.InnerException.Message);
+                }
+                else
+                {
+                    s_QueriesOutLogManager?.AddEntry("Connect exception: " + ex.Message);
+                }
+                return false;
+            }
+            return true;
+        }
+
         s_ConnectionString = connectionString ;
         s_ConectionTypeEnum = conectionTypeEnum;
 
@@ -106,16 +143,16 @@ public class CQueryTester
                 s_QueriesOutLogManager?.AddEntry("Connected to database");
             }
             DateTime start = DateTime.Now;
-            int chute = SyncSELECTandDELETEchute();
-            if (chute < -1)
-            {
-                s_QueriesOutLogManager?.AddEntry("Connect error: No response from database");
-                return false;
-            }
-            else
-            {
-                s_QueriesOutLogManager?.AddEntry("Chute: " + chute);
-            }
+            //int chute = SyncSELECTandDELETEchute();
+            //if (chute < -1)
+            //{
+            //    s_QueriesOutLogManager?.AddEntry("Connect error: No response from database");
+            //    return false;
+            //}
+            //else
+            //{
+            //    s_QueriesOutLogManager?.AddEntry("Chute: " + chute);
+            //}
             s_QueriesOutLogManager?.AddEntry("Connect time: " + (DateTime.Now - start).TotalMilliseconds + " ms");
         }
         catch (Exception ex)
@@ -134,6 +171,19 @@ public class CQueryTester
     }
     static public bool IsConnected()
     {
+        if (s_ConectionTypeEnum == ConectionTypeEnum.ODBC)
+        {
+            if (s_OdbcConnection == null)
+            {
+                return false;
+            }
+            if (s_OdbcConnection.State != System.Data.ConnectionState.Open)
+            {
+                return false;
+            }
+            return true;
+        }
+
         if (s_Context == null)
         {
             return false;
@@ -222,6 +272,7 @@ public class CQueryTester
     }
     static public void RunLoadedQueries()
     {
+        s_QueriesOutLogManager?.AddEntry("Running Queries. Results: \nPositive: Result \n-2: Timed Out \n-3: Exception");
         List<Thread> threads = new List<Thread>();
         foreach (Query q in s_Queries)
         {
@@ -273,6 +324,44 @@ public class CQueryTester
         // UVRBar02 = Z en centímetros sin decimales
         // UVRTabla es el código identificativo de la cinta.Habrá 2 cintas trabajando a la vez y sobre la misma
         //tabla y esto identificará los registros a tener en cuenta por cada una.
+
+        if (s_ConectionTypeEnum == ConectionTypeEnum.ODBC)
+        {
+            //use new context
+            using (OdbcConnection connection = new OdbcConnection(s_ConnectionString))
+            {
+                try
+                {
+                    // Open the connection
+                    connection.Open();
+                    string insertQuery = $"EXEC K10AltaCinta @cinta='K10CINT149_1', @CodigoBarras={barcode}, @PesoGramos={pesoGramos}, @Xcms={largoCM}, @Ycms={anchoCM}, @Zcms={altoCM}";
+                    using (OdbcCommand insertCommand = new OdbcCommand(insertQuery, connection))
+                    {
+                        int rowsAffected = insertCommand.ExecuteNonQuery();
+                        // -1 for successfull execution
+                        if (rowsAffected == -1)
+                        {
+                            return 1;
+                        }
+                        return rowsAffected;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    if (ex.InnerException != null)
+                    {
+                        s_QueriesOutLogManager?.AddEntry("INSERT Parcel Data exception: " + ex.InnerException.Message);
+                    }
+                    else
+                    {
+                        s_QueriesOutLogManager?.AddEntry("INSERT Parcel Data exception: " + ex.Message);
+                    }
+                    return -3;
+                }
+            }
+            return 0;
+        }
+
 
         if (s_Context == null)
         {
@@ -407,6 +496,61 @@ public class CQueryTester
 
         //  UVRKeyN02 = Número de carril por donde debe desviar el paquete actual
         //use new context
+
+        if (s_ConectionTypeEnum == ConectionTypeEnum.ODBC)
+        {
+            //use new context
+            using (OdbcConnection connection = new OdbcConnection(s_ConnectionString))
+            {
+                try
+                {
+                    // Open the connection
+                    connection.Open();
+                    string query = $"EXEC K10Obtienecarril @cinta='K10CINT149_1'";
+                    int ret = -1;
+                    using (OdbcCommand selectCommand = new OdbcCommand(query, connection))
+                    {
+                        using (OdbcDataReader reader = selectCommand.ExecuteReader())
+                        {
+                            
+                            while (reader.Read())
+                            {
+                                ret = reader.GetInt32(0);
+                            }
+                            if (ret == -1)
+                            {
+                                return -3;
+                            }
+                        }
+                    }
+                    string query2 = $"EXEC K10BorraCarril @cinta='K10CINT149_1'";
+                    using (OdbcCommand deleteCommand = new OdbcCommand(query2, connection))
+                    {
+                        int rowsAffected = deleteCommand.ExecuteNonQuery();
+                        if (rowsAffected != -1)
+                        {
+                            return -3;
+                        }
+                        return ret;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    if (ex.InnerException != null)
+                    {
+                        s_QueriesOutLogManager?.AddEntry("INSERT Parcel Data exception: " + ex.InnerException.Message);
+                    }
+                    else
+                    {
+                        s_QueriesOutLogManager?.AddEntry("INSERT Parcel Data exception: " + ex.Message);
+                    }
+                    return -3;
+                }
+            }
+            return 0;
+        }
+
+
         using (Gls149TestContext context = new Gls149TestContext(s_ConnectionString, s_ConectionTypeEnum))
         {
             int lane = -1;
@@ -423,7 +567,11 @@ public class CQueryTester
 
                 // With Procedure
                 string query = $"EXEC K10Obtienecarril @cinta='K10CINT149_1'";
-                List<Univerre>? res = context?.Univerres.FromSqlRaw(query).ToList();
+                //var res = context?.Database
+                //    .ExecuteSqlRaw(query)
+                //    .Select(u => new { u.UVRKeyN02 }) // Now perform client-side projection
+                //    .ToList();
+                List<K10Obtienecarril>? res = context?.Set<K10Obtienecarril>().FromSqlRaw(query).ToList();
                 if (res == null)
                 {
                     return -3;
@@ -481,6 +629,44 @@ public class CQueryTester
         //  UVRKeyN02 = Número de carril saturado
         //  UVRKeyC01 = Código de barras
         //use new context
+
+        if (s_ConectionTypeEnum == ConectionTypeEnum.ODBC)
+        {
+            //use new context
+            using (OdbcConnection connection = new OdbcConnection(s_ConnectionString))
+            {
+                try
+                {
+                    // Open the connection
+                    connection.Open();
+                    string insertQuery = $"EXEC K10AltaCarrilSaturado @cinta='K10CINT149_1', @CodigoBarras={barcode}, @CarrilSaturado={chute}";
+                    using (OdbcCommand insertCommand = new OdbcCommand(insertQuery, connection))
+                    {
+                        int rowsAffected = insertCommand.ExecuteNonQuery();
+                        // -1 for successfull execution
+                        if (rowsAffected == -1)
+                        {
+                            return 1;
+                        }
+                        return rowsAffected;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    if (ex.InnerException != null)
+                    {
+                        s_QueriesOutLogManager?.AddEntry("INSERT Parcel Data exception: " + ex.InnerException.Message);
+                    }
+                    else
+                    {
+                        s_QueriesOutLogManager?.AddEntry("INSERT Parcel Data exception: " + ex.Message);
+                    }
+                    return -3;
+                }
+            }
+            return 0;
+        }
+
         using (Gls149TestContext context = new Gls149TestContext(s_ConnectionString, s_ConectionTypeEnum))
         {
             Univerre univerre = new Univerre

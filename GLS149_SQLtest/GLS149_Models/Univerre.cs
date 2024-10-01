@@ -35,3 +35,7 @@ public partial class Univerre
 
     public DateTime? Uvrdt02 { get; set; }
 }
+public class K10Obtienecarril
+{
+    public int UVRKeyN02 { get; set; }
+}

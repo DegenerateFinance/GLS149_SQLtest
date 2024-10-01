@@ -8,6 +8,8 @@ using System;
 using System.Collections.Generic;
 
 using GLS149_SQLtest.Models;
+using System.Data.Odbc;
+
 public partial class Form3 : Form
 {
     static private IniManager? s_IniManager_Connection;
@@ -26,7 +28,20 @@ public partial class Form3 : Form
             List<string> sectionsError = new List<string>();
             string sqlconnINI = "FicherosINI//SQLConn.ini";
             s_IniManager_Connection = new IniManager(sqlconnINI);
-            CbDbEngine.SelectedIndex = s_IniManager_Connection.GetString("GENERAL", "Driver", "MySQL", ref sectionsError).Contains("MySQL", StringComparison.InvariantCultureIgnoreCase) ? 0 : 1;
+            string engine = s_IniManager_Connection.GetString("GENERAL", "Engine", "MySQL", ref sectionsError);
+            if (engine.Contains("ODBC", StringComparison.InvariantCultureIgnoreCase))
+            {
+                CbDbEngine.SelectedIndex = 2;
+            }
+            else if (engine.Contains("SQLServer", StringComparison.InvariantCultureIgnoreCase))
+            {
+                CbDbEngine.SelectedIndex = 1;
+            }
+            else if (engine.Contains("MySQL", StringComparison.InvariantCultureIgnoreCase))
+            {
+                CbDbEngine.SelectedIndex = 0;
+            }
+            TbODBCDriver.Text = s_IniManager_Connection.GetString("GENERAL", "Driver", "MySQL ODBC 8.0 ANSI Driver", ref sectionsError);
             TbServer.Text = s_IniManager_Connection.GetString("GENERAL", "Server", "localhost", ref sectionsError);
             TbDatabase.Text = s_IniManager_Connection.GetString("GENERAL", "Database", "gls149_test", ref sectionsError);
             TbUser.Text = s_IniManager_Connection.GetString("GENERAL", "User", "root", ref sectionsError);
@@ -63,17 +78,65 @@ public partial class Form3 : Form
         string user = TbUser.Text;
         string password = TbPassword.Text;
 
-
-
         string connectionString = "";
+        CQueryTester.ConectionTypeEnum ConectionTypeEnum = CQueryTester.ConectionTypeEnum.NotSelected;
+        if (CbDbEngine.SelectedIndex == 0)
+        {
+            ConectionTypeEnum = CQueryTester.ConectionTypeEnum.MySQL;
+        }
+        else if (CbDbEngine.SelectedIndex == 1)
+        {
+            ConectionTypeEnum = CQueryTester.ConectionTypeEnum.SQLServer;
+        }
+        else if (CbDbEngine.SelectedIndex == 2)
+        {
+            ConectionTypeEnum = CQueryTester.ConectionTypeEnum.ODBC;
+        }
 
-        Gls149TestContext.ConectionTypeEnum ConectionTypeEnum = CbDbEngine.SelectedIndex == 0 ? Gls149TestContext.ConectionTypeEnum.MySQL : Gls149TestContext.ConectionTypeEnum.SQLServer;
+        if (ConectionTypeEnum == CQueryTester.ConectionTypeEnum.NotSelected)
+        {
+            MessageBox.Show("Select a database engine");
+            return;
+        }
 
-        if (ConectionTypeEnum == Gls149TestContext.ConectionTypeEnum.SQLServer)
+
+        if (ConectionTypeEnum == CQueryTester.ConectionTypeEnum.ODBC)
+        {
+            if (string.IsNullOrEmpty(TbODBCDriver.Text))
+            {
+                MessageBox.Show("ODBC Driver is required");
+                return;
+            }
+            string driver = TbODBCDriver.Text;
+            // ODBC connection string
+            connectionString = $"Driver={{{driver}}};Server={server};Database={database};Uid={user};Pwd={password};";
+            if (!CQueryTester.Connect(connectionString, ConectionTypeEnum))
+            {
+                MessageBox.Show("Error connecting to the database");
+                return;
+            }
+            if (!CQueryTester.IsConnected())
+            {
+                MessageBox.Show("Error connecting to the database");
+                return;
+            }
+            MessageBox.Show("Connection successful");
+            return;
+        }
+
+
+        
+
+
+        
+
+        
+
+        if (ConectionTypeEnum == CQueryTester.ConectionTypeEnum.SQLServer)
         {
             connectionString = $"Server={server};Database={database};User Id={user};Password={password}; TrustServerCertificate=True; Encrypt=False;";
         }
-        else if (ConectionTypeEnum == Gls149TestContext.ConectionTypeEnum.MySQL)
+        else if (ConectionTypeEnum == CQueryTester.ConectionTypeEnum.MySQL)
         {
             connectionString = $"Server={server};Database={database};User Id={user};Password={password};";
         }
@@ -99,18 +162,7 @@ public partial class Form3 : Form
         CQueryTester.RunLoadedQueries();
         MessageBox.Show("Query executed successfully. See Outs/out");
     }
-    private void Form1_FormClosing(object sender, FormClosingEventArgs e)
-    {
-        s_IniManager_Connection?.SetValue("GENERAL", "Driver", CbDbEngine.SelectedIndex == 0 ? "MySQl" : "SQLServer");
-        s_IniManager_Connection?.SetValue("GENERAL", "Server", TbServer.Text);
-        s_IniManager_Connection?.SetValue("GENERAL", "Database", TbDatabase.Text);
-        s_IniManager_Connection?.SetValue("GENERAL", "User", TbUser.Text);
-        s_IniManager_Connection?.SetValue("GENERAL", "Password", TbPassword.Text);
-
-        s_GeneralLogManager?.FinalizeLogManager();
-        CQueryTester.FinalizeQueryTester();
-    }
-
+    
     private void BtnOpenOurFolder_Click(object sender, EventArgs e)
     {
         if (CQueryTester.s_QueriesOutLogManager?.LogFullPath is not string p)
@@ -119,6 +171,35 @@ public partial class Form3 : Form
             return;
         }
         Process.Start("explorer.exe", p);
+    }
+
+    private void CbDbEngine_SelectedIndexChanged(object sender, EventArgs e)
+    {
+        LblODBCDriver.Visible = CbDbEngine.SelectedIndex == 2;
+        TbODBCDriver.Visible = CbDbEngine.SelectedIndex == 2;
+    }
+    private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+    {
+        if (CbDbEngine.SelectedIndex == 0)
+        {
+            s_IniManager_Connection?.SetValue("GENERAL", "Engine", "MySQl");
+        }
+        else if (CbDbEngine.SelectedIndex == 1)
+        {
+            s_IniManager_Connection?.SetValue("GENERAL", "Engine", "SQLServer");
+        }
+        else if (CbDbEngine.SelectedIndex == 2)
+        {
+            s_IniManager_Connection?.SetValue("GENERAL", "Engine", "ODBC");
+        }
+        s_IniManager_Connection?.SetValue("GENERAL", "Driver", TbODBCDriver.Text);
+        s_IniManager_Connection?.SetValue("GENERAL", "Server", TbServer.Text);
+        s_IniManager_Connection?.SetValue("GENERAL", "Database", TbDatabase.Text);
+        s_IniManager_Connection?.SetValue("GENERAL", "User", TbUser.Text);
+        s_IniManager_Connection?.SetValue("GENERAL", "Password", TbPassword.Text);
+
+        s_GeneralLogManager?.FinalizeLogManager();
+        CQueryTester.FinalizeQueryTester();
     }
 }
 

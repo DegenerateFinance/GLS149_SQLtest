@@ -41,6 +41,8 @@
             CbDbEngine = new ComboBox();
             BtnQuery = new Button();
             BtnOpenOurFolder = new Button();
+            TbODBCDriver = new TextBox();
+            LblODBCDriver = new Label();
             SuspendLayout();
             // 
             // BtnConnect
@@ -133,11 +135,12 @@
             // CbDbEngine
             // 
             CbDbEngine.FormattingEnabled = true;
-            CbDbEngine.Items.AddRange(new object[] { "MySQL", "SQL Server" });
+            CbDbEngine.Items.AddRange(new object[] { "MySQL", "SQL Server", "ODBC" });
             CbDbEngine.Location = new Point(178, 51);
             CbDbEngine.Name = "CbDbEngine";
             CbDbEngine.Size = new Size(121, 23);
             CbDbEngine.TabIndex = 11;
+            CbDbEngine.SelectedIndexChanged += CbDbEngine_SelectedIndexChanged;
             // 
             // BtnQuery
             // 
@@ -159,11 +162,30 @@
             BtnOpenOurFolder.UseVisualStyleBackColor = true;
             BtnOpenOurFolder.Click += BtnOpenOurFolder_Click;
             // 
+            // TbODBCDriver
+            // 
+            TbODBCDriver.Location = new Point(435, 54);
+            TbODBCDriver.Name = "TbODBCDriver";
+            TbODBCDriver.Size = new Size(210, 23);
+            TbODBCDriver.TabIndex = 15;
+            TbODBCDriver.Text = "ODBC Driver 17 for SQL Server";
+            // 
+            // LblODBCDriver
+            // 
+            LblODBCDriver.AutoSize = true;
+            LblODBCDriver.Location = new Point(356, 57);
+            LblODBCDriver.Name = "LblODBCDriver";
+            LblODBCDriver.Size = new Size(73, 15);
+            LblODBCDriver.TabIndex = 16;
+            LblODBCDriver.Text = "ODBC Driver";
+            // 
             // Form3
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(694, 523);
+            Controls.Add(LblODBCDriver);
+            Controls.Add(TbODBCDriver);
             Controls.Add(BtnOpenOurFolder);
             Controls.Add(BtnQuery);
             Controls.Add(CbDbEngine);
@@ -200,5 +222,7 @@
         private ComboBox CbDbEngine;
         private Button BtnQuery;
         private Button BtnOpenOurFolder;
+        private TextBox TbODBCDriver;
+        private Label LblODBCDriver;
     }
 }

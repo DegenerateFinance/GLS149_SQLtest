@@ -14,22 +14,18 @@ namespace GLS149_SQLtest.Models;
 public partial class Gls149TestContext : DbContext
 {
     private string _connectionString;
-    private ConectionTypeEnum _conectionTypeEnum;
-    public enum ConectionTypeEnum 
-    { 
-        MySQL = 0, 
-        SQLServer = 1 
-    }
+    private CQueryTester.ConectionTypeEnum _conectionTypeEnum;
+    
     public Gls149TestContext(DbContextOptions<Gls149TestContext> options)
         : base(options)
     {
     }
-    public Gls149TestContext(string connectionstring, ConectionTypeEnum conectionTypeEnum)
+    public Gls149TestContext(string connectionstring, CQueryTester.ConectionTypeEnum conectionTypeEnum)
     {
         _connectionString = connectionstring;
         _conectionTypeEnum = conectionTypeEnum;
     }
-    public void SetConnectionType(string connectionstring, ConectionTypeEnum conectionTypeEnum)
+    public void SetConnectionType(string connectionstring, CQueryTester.ConectionTypeEnum conectionTypeEnum)
     {
         _connectionString = connectionstring;
         _conectionTypeEnum = conectionTypeEnum;
@@ -88,12 +84,18 @@ public partial class Gls149TestContext : DbContext
                 .HasColumnName("UVRTxt02");
         });
 
+        modelBuilder.Entity<K10Obtienecarril>(entity =>
+        {
+            entity.HasNoKey();  // This tells EF that this class doesn't have a primary key
+            entity.Property(e => e.UVRKeyN02).HasColumnName("UVRKeyN02");
+        });
+
         OnModelCreatingPartial(modelBuilder);
     }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        if (_conectionTypeEnum == ConectionTypeEnum.MySQL)
+        if (_conectionTypeEnum == CQueryTester.ConectionTypeEnum.MySQL)
         {
             if (!optionsBuilder.IsConfigured)
             {
@@ -103,7 +105,7 @@ public partial class Gls149TestContext : DbContext
                     new MySqlServerVersion(new Version(8, 0, 36))); // Specify the MySQL version you're using
             }
         }
-        if (_conectionTypeEnum == ConectionTypeEnum.SQLServer)
+        if (_conectionTypeEnum == CQueryTester.ConectionTypeEnum.SQLServer)
         {
             if (!optionsBuilder.IsConfigured)
             {
