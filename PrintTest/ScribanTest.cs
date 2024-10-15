@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -55,12 +57,16 @@ public partial class ScribanTest : Form
         // Check if the clicked cell is in the Delete button column
         if (e.ColumnIndex == DgItems.Columns[rmColumnName].Index && e.RowIndex >= 0)
         {
-            // Remove the row at the clicked index
-            DgItems.Rows.RemoveAt(e.RowIndex);
+            //if removable
+            if (DgItems.Rows[e.RowIndex].Cells[barcodeColumnName].Value != null)
+            {
+                // Remove the row at the clicked index
+                DgItems.Rows.RemoveAt(e.RowIndex);
+            }
         }
     }
 
-    private async void btnPrint_Click(object sender, EventArgs e)
+    private void btnPrint_Click(object sender, EventArgs e)
     {
         List<Item> items = new List<Item>();
         for (int i = 0; i < DgItems.Rows.Count; i++)
@@ -84,13 +90,58 @@ public partial class ScribanTest : Form
 
         InvoiceGenerator invoiceGenerator = new InvoiceGenerator();
         
-        List<string> paginatedHtmlPages = await invoiceGenerator.GeneratePaginatedInvoicesHtml(invoice);
+        List<string> errList = new List<string>();
 
+        List<string> paginatedHtmlPages = invoiceGenerator.GeneratePaginatedInvoicesHtml(invoice, ref errList);
+
+        List<string> filePaths = new List<string>();
         // save html pages to disk
         for (int i = 0; i < paginatedHtmlPages.Count; i++)
         {
-            string filePath = $"invoice_{i}.html";
-            await File.WriteAllTextAsync(filePath, paginatedHtmlPages[i]);
+            string filePath = $"FicherosINI\\invoice_{i}.html";
+            filePaths.Add(filePath);
+            File.WriteAllText(filePath, paginatedHtmlPages[i]);
+        }
+
+        
+        if (filePaths.Count > 0)
+        {
+            try
+            {
+                // get current directory
+                string currentDirectory = Directory.GetCurrentDirectory();
+                // get the path of the first file
+                string filePath = Path.Combine(currentDirectory, filePaths[0]);
+
+                //Process.Start(filePath);
+
+
+
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                {
+                    Process.Start(new ProcessStartInfo("cmd", $"/c start chrome \"{filePath}\"") { CreateNoWindow = true });
+                }
+                else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                {
+                    Process.Start("open", $"-a \"Google Chrome\" --args --kiosk-printing \"{filePaths[0]}\"");
+                }
+                else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                {
+                    Process.Start("xdg-open", filePaths[0]);
+                    // Note: Linux doesn't have a standard way to invoke kiosk printing across all browsers
+                }
+                else
+                {
+                    throw new PlatformNotSupportedException("Unsupported operating system");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An error occurred: {ex.Message}");
+            }
+
+            //HtmlPrinter htmlPrinter = new HtmlPrinter(paginatedHtmlPages[0]);
+            //htmlPrinter.PrintHtml();
         }
 
 

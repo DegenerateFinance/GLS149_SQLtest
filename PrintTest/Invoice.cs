@@ -35,8 +35,7 @@ public class InvoiceGenerator
 {
     public List<string> GeneratePaginatedInvoicesHtml(InvoiceModel model, ref List<string> errors)
     {
-        string templateFile = "FicherosINI/invoice_template.html";
-        const int itemsPerPage = 50;
+        string templateFile = "FicherosINI/invoice3_template.html";
         var paginatedHtmlList = new List<string>();
         var templateContent = File.ReadAllText(templateFile);
 
@@ -57,28 +56,20 @@ public class InvoiceGenerator
                 .Where(item => item != null && item.Name != null)
                 .ToList();
 
-            int totalItems = validItems.Count;
-
-            for (int i = 0; i < totalItems; i += itemsPerPage)
+            var pageData = new
             {
-                var currentPageItems = validItems.GetRange(i, Math.Min(itemsPerPage, totalItems - i));
-                var pageData = new
+                client_name = model.ClientName ?? "",
+                invoice_date = model.InvoiceDate ?? "",
+                items = validItems.Select(item => new
                 {
-                    client_name = model.ClientName ?? "",
-                    invoice_date = model.InvoiceDate ?? "",
-                    items = currentPageItems.Select(item => new
-                    {
-                        name = item.Name,
-                        quantity = item.Quantity,
-                        price = item.Price
-                    }).ToList(),
-                    total_price = model.TotalPrice,
-                    page_number = (i / itemsPerPage) + 1,
-                    is_last_page = (i + itemsPerPage) >= totalItems
-                };
-                var result = template.Render(pageData);
-                paginatedHtmlList.Add(result);
-            }
+                    name = item.Name,
+                    quantity = item.Quantity,
+                    price = item.Price
+                }).ToList(),
+                total_price = model.TotalPrice
+            };
+            var result = template.Render(pageData);
+            paginatedHtmlList.Add(result);
         }
         catch (Exception e)
         {

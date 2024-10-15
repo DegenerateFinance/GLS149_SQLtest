@@ -1,0 +1,64 @@
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Albaran de Entrega</title>
+    <link rel="stylesheet" href="template2_style.css">
+</head>
+<body>
+    <div class="header">
+        <h1>ddd</h1>
+    </div>
+    <h1>Albaran de Entrega</h1>
+    <div class="content">
+        <h1>Recipient</h1>
+        <p>Client: {{ client_name }}</p>
+        <p>Date: {{ invoice_date }}</p>
+
+        <table class="items">
+            <thead>
+                <tr>
+                    <th>Item</span></th>
+                    <th>Description</span></th>
+                    <th>Rate</span></th>
+                    <th>Quantity</span></th>
+                    <th>Price</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                {{for item in items}}
+                {{ if item != null }}
+                <tr>
+                    <td>{{ item.name }}</td>
+                    <td>{{ item.quantity }}</td>
+                    <td>{{ item.price }}</td>
+                </tr>
+                {{ end }}
+                {{ end }}
+            </tbody>
+        </table>
+
+        <table class="inventory">
+            <thead>
+                <tr>
+                    <th>Item </th>
+                    <th>Description </th>
+                    <th>Rate </th>
+                    <th>Quantity </th>
+                    <th>Price </th>
+                </tr>
+            </thead>
+        </table>
+
+        <table class="balance">
+            <tr>
+                <th><span>Total: </span></th>
+                <td><span>{{total_price}}</span></td>
+            </tr>
+        </table>
+    </div class="content">
+        <div>
+            <p>No se admiten devoluciones pasados 15 días de la fecha de compra</p>
+        </div>
+    </div>
+</body>
+</html>

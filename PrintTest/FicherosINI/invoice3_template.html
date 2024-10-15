@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Albaran de entrega</title>
+    <link rel="stylesheet" href="template3_style.css">
+</head>
+<body>
+    <div class="invoice">
+        <header>
+            <h1>Albaran de entrega</h1>
+            <p>Fecha: {{ invoice_date }}</p>
+        </header>
+        
+        <section class="items">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Item</span></th>
+                        <th>Description</span></th>
+                        <th>Quantity</span></th>
+                        <th>Price</span></th>
+                        <th>Total</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{for item in items}}
+                    {{ if item != null }}
+                    <tr>
+                        <td>{{ item.name }}</td>
+                        <td>{{ item.description }}</td>
+                        <td>{{ item.quantity }}</td>
+                        <td>{{ item.price }}</td>
+                        <td>{{ item.total }}</td>
+                    </tr>
+                    {{ end }}
+                    {{ end }}
+                </tbody>
+            </table>
+        </section>
+        
+        <section class="totals">
+            <p><strong>Subtotal:</strong> $<span id="subtotal"></span></p>
+            <p><strong>Tax:</strong> $<span id="tax"></span></p>
+            <p class="grand-total"><strong>Grand Total:</strong> $<span id="grand-total"></span></p>
+        </section>
+        
+        <footer>
+            <p>Thank you for your business!</p>
+        </footer>
+    </div>
+</body>
+</html>
