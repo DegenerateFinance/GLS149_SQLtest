@@ -109,7 +109,7 @@ public partial class Form3 : Form
             }
             string driver = TbODBCDriver.Text;
             // ODBC connection string
-            connectionString = $"Driver={{{driver}}};Server={server};Database={database};Uid={user};Pwd={password};";
+            connectionString = $"Driver={{{driver}}};Server={server};Database={database};Uid={user};Pwd={password};Connection Timeout=1";
             if (!CQueryTester.Connect(connectionString, ConectionTypeEnum))
             {
                 MessageBox.Show("Error connecting to the database");
@@ -125,20 +125,13 @@ public partial class Form3 : Form
         }
 
 
-        
-
-
-        
-
-        
-
         if (ConectionTypeEnum == CQueryTester.ConectionTypeEnum.SQLServer)
         {
-            connectionString = $"Server={server};Database={database};User Id={user};Password={password}; TrustServerCertificate=True; Encrypt=False;";
+            connectionString = $"Server={server};Database={database};User Id={user};Password={password}; TrustServerCertificate=True; Encrypt=False;Connect Timeout=1;";
         }
         else if (ConectionTypeEnum == CQueryTester.ConectionTypeEnum.MySQL)
         {
-            connectionString = $"Server={server};Database={database};User Id={user};Password={password};";
+            connectionString = $"Server={server};Database={database};User Id={user};Password={password};Connection Timeout=1";
         }
         if (!CQueryTester.Connect(connectionString, ConectionTypeEnum))
         {
@@ -182,7 +175,7 @@ public partial class Form3 : Form
     {
         if (CbDbEngine.SelectedIndex == 0)
         {
-            s_IniManager_Connection?.SetValue("GENERAL", "Engine", "MySQl");
+            s_IniManager_Connection?.SetValue("GENERAL", "Engine", "MySQL");
         }
         else if (CbDbEngine.SelectedIndex == 1)
         {

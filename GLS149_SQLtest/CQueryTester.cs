@@ -16,6 +16,7 @@ using System.Threading;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 using static GLS149_SQLtest.CQueryTester.Query;
 using System.Data.Odbc;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace GLS149_SQLtest;
 
@@ -131,7 +132,7 @@ public class CQueryTester
         try
         {
             s_Context?.Database.SetCommandTimeout(1);
-            s_Context?.Database.EnsureCreated();
+            //s_Context?.Database.EnsureCreated();
             s_Context?.Database.OpenConnection();
             if (s_Context == null)
             {
@@ -304,15 +305,36 @@ public class CQueryTester
         {
             t.Join();
         }
-
         foreach (Query q in s_Queries)
         {
             s_QueriesOutLogManager?.AddEntry($"Query_{q.Id} of \nType: {q.QType} \nResult: {q.Result} \nTimeTaken: {q.MsTimeTaken} ms");
         }
+        SaveQueryResultsToCSV();
+    }
+
+    static private void SaveQueryResultsToCSV()
+    {
+        string csv = "Id;Type;MsTimeout;MsTimeNextQuery;Result: -2:Timeout -3: Exception;MsTimeTaken\n";
+        foreach (Query q in s_Queries)
+        {
+            csv += $"{q.Id};{(int)q.QType}: {Enum.GetName(q.QType)};{q.MsTimeout};{q.MsTimeNextQuery};{q.Result};{q.MsTimeTaken}\n";
+        }
+        string LogNameWithDate = logDir + "/" + DateTime.Now.ToString("yyyy-MM-dd hh_mm_ss_fff") + "_" + logFile + ".csv";
+
+        if (!Directory.Exists(logDir))
+        {
+            Directory.CreateDirectory(logDir);
+        }
+        //create the file if it doesnt exist
+        if (!File.Exists(LogNameWithDate))
+        {
+            File.Create(LogNameWithDate).Close();
+        }
+        File.WriteAllText(LogNameWithDate, csv);
     }
 
     // 1. Registro que graba IDESAI. Cuando la cinta lee un paquete, debe grabar un registro con el código de barras
-    static public int SyncINSERTParcelData(string barcode, int pesoGramos, int largoCM, int anchoCM, int altoCM)
+    static public int SyncINSERTParcelData(string barcode, int pesoGramos, int largoCM, int anchoCM, int altoCM, int secTimeOut = 1)
     {
         // Registro que graba IDESAI. Datos de código de barras, aristas y peso.
         // UVRTabla = K10CINT149_1
@@ -332,6 +354,7 @@ public class CQueryTester
             {
                 try
                 {
+                    connection.ConnectionTimeout = secTimeOut;
                     // Open the connection
                     connection.Open();
                     string insertQuery = $"EXEC K10AltaCinta @cinta='K10CINT149_1', @CodigoBarras={barcode}, @PesoGramos={pesoGramos}, @Xcms={largoCM}, @Ycms={anchoCM}, @Zcms={altoCM}";
@@ -372,6 +395,7 @@ public class CQueryTester
         //use new context
         using (Gls149TestContext context = new Gls149TestContext(s_ConnectionString, s_ConectionTypeEnum))
         {
+            context.Database.SetCommandTimeout(secTimeOut);
             Univerre univerre = new Univerre
             {
                 UVRTabla = "K10CINT149_1",
@@ -392,11 +416,12 @@ public class CQueryTester
                 int? result = 0;
                 string query = $"EXEC K10AltaCinta @cinta='K10CINT149_1', @CodigoBarras={barcode}, @PesoGramos={pesoGramos}, @Xcms={largoCM}, @Ycms={anchoCM}, @Zcms={altoCM}";
                 result =context?.Database.ExecuteSqlRaw(query);
-                if (result == null)
+                if (result is null)
                 {
                     s_QueriesOutLogManager?.AddEntry("INSERT Parcel Data error: No response from database");
                     return -3;
                 }
+                return 1;
             }
             catch (Exception ex)
             {
@@ -415,9 +440,10 @@ public class CQueryTester
     }
     static private void INSERTParcelDataThread(int query_id, string barcode, int pesoGramos, int largoCM, int anchoCM, int altoCM)
     {
+        int s_timeout = (int)Math.Ceiling((double)s_Queries[query_id].MsTimeout / 1000);
         s_Queries[query_id].StartQuery();
         DateTime start = DateTime.Now;
-        int result = SyncINSERTParcelData(barcode, pesoGramos, largoCM, anchoCM, altoCM);
+        int result = SyncINSERTParcelData(barcode, pesoGramos, largoCM, anchoCM, altoCM, secTimeOut: s_timeout);
         if (s_Queries[query_id].TimeOut < DateTime.Now)
         {
             s_Queries[query_id].Result = -2;
@@ -488,7 +514,7 @@ public class CQueryTester
     //}
 
     // 3. Registro que graba GLS#149. Para decir porque carril debe desviar el paquete que acaba de leer.
-    static public int SyncSELECTandDELETEchute()
+    static public int SyncSELECTandDELETEchute(int secTimeOut = 1)
     {
         //  Registro que graba GLS#149. Para decir porque carril debe desviar el paquete que acaba de leer.
         //  UVRTabla = K10CINT149_1
@@ -502,6 +528,7 @@ public class CQueryTester
             //use new context
             using (OdbcConnection connection = new OdbcConnection(s_ConnectionString))
             {
+                connection.ConnectionTimeout = secTimeOut;
                 try
                 {
                     // Open the connection
@@ -553,6 +580,7 @@ public class CQueryTester
 
         using (Gls149TestContext context = new Gls149TestContext(s_ConnectionString, s_ConectionTypeEnum))
         {
+            context.Database.SetCommandTimeout(secTimeOut);
             int lane = -1;
             try
             {
@@ -602,11 +630,12 @@ public class CQueryTester
     static private void SELECTandDELETEchuteThread(int query_id)
     {
         s_Queries[query_id].StartQuery();
+        int s_timeout = (int)Math.Ceiling((double)s_Queries[query_id].MsTimeout / 1000);
         DateTime start = DateTime.Now;
         int result = -1;
         while (result == -1)
         {
-            result = SyncSELECTandDELETEchute();
+            result = SyncSELECTandDELETEchute(secTimeOut: s_timeout);
             if (s_Queries[query_id].TimeOut < DateTime.Now)
             {
                 s_Queries[query_id].Result = -2;
@@ -619,7 +648,7 @@ public class CQueryTester
     }
 
     // 4. Registro que graba GLS#149. Para decir que el carril por donde debe desviar el paquete está saturado.
-    static public int SyncINSERTFullChute(string barcode, int chute)
+    static public int SyncINSERTFullChute(string barcode, int chute, int secTimeOut = 1)
     {
         //  Registro que graba IDESAI. Cuando el carril por donde debe desviar el paquete está saturado, y la cinta lo
         //envía al 0, esta debe grabar un registro para un posterior tratamiento por parte del ERP.En este caso puede
@@ -635,6 +664,7 @@ public class CQueryTester
             //use new context
             using (OdbcConnection connection = new OdbcConnection(s_ConnectionString))
             {
+                connection.ConnectionTimeout = secTimeOut;
                 try
                 {
                     // Open the connection
@@ -669,6 +699,7 @@ public class CQueryTester
 
         using (Gls149TestContext context = new Gls149TestContext(s_ConnectionString, s_ConectionTypeEnum))
         {
+            context.Database.SetCommandTimeout(secTimeOut);
             Univerre univerre = new Univerre
             {
                 UVRTabla = "K10CINT149_1",
@@ -682,7 +713,7 @@ public class CQueryTester
                 int? result = 0;
                 string query = $"EXEC K10AltaCarrilSaturado @cinta='K10CINT149_1', @CodigoBarras={barcode}, @CarrilSaturado={chute}";
                 result = context?.Database.ExecuteSqlRaw(query);
-                if (result == null)
+                if (result is null)
                 {
                     s_QueriesOutLogManager?.AddEntry("INSERT Parcel Data error: No response from database");
                     return -3;
@@ -692,7 +723,7 @@ public class CQueryTester
                 //context?.Univerres.Add(univerre);
                 //context?.SaveChanges();
 
-                return 0;
+                return 1;
             }
             catch (Exception ex)
             {
@@ -710,9 +741,12 @@ public class CQueryTester
     }
     static private void INSERTFullChuteThread(int query_id, string barcode, int rampaLlena)
     {
+        // ms to sec
+        int s_timeout = (int)Math.Ceiling((double)s_Queries[query_id].MsTimeout / 1000); 
+
         s_Queries[query_id].StartQuery();
         DateTime start = DateTime.Now;
-        int result = SyncINSERTFullChute(barcode, rampaLlena);
+        int result = SyncINSERTFullChute(barcode, rampaLlena, secTimeOut:s_timeout);
         if (s_Queries[query_id].TimeOut < DateTime.Now)
         {
             s_Queries[query_id].Result = -2;

@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <Version>24.8.0.2</Version>
+    <Version>24.8.0.3</Version>
     <SourceRevisionId>build$([System.DateTime]::UtcNow.ToString(" yyyy-MM-dd HH:mm:ss.fff"))</SourceRevisionId>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows</TargetFramework>
