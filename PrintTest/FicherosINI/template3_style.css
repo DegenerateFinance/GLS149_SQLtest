@@ -66,4 +66,45 @@ footer {
     .invoice {
         border: none;
     }
+
+    @page {
+        size: auto;
+        margin: 0mm;
+    }
+
+    @page :first {
+        margin-top: 0;
+    }
+
+    @page :left {
+        margin-left: 0;
+    }
+
+    @page :right {
+        margin-right: 0;
+    }
+
+    /* Hide default headers and footers */
+    @page {
+        margin-top: 0.75cm;
+        margin-bottom: 0.75cm;
+        @top-left {
+            content: '';
+        }
+        @top-center {
+            content: '';
+        }
+        @top-right {
+            content: '';
+        }
+        @bottom-left {
+            content: '';
+        }
+        @bottom-center {
+            content: counter(page);
+        }
+        @bottom-right {
+            content: '';
+        }
+    }
 }

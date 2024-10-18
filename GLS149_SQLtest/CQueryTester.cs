@@ -57,6 +57,18 @@ public class CQueryTester
         
         public int Id;
         public List<string> Parameters = new List<string>();
+        public string SemicolonSeparatedParameters
+        {
+            get
+            {
+                string result = "";
+                foreach (string p in Parameters)
+                {
+                    result += p + ";";
+                }
+                return result.TrimEnd(';');
+            }
+        }
         public int MsTimeNextQuery;
         public int MsTimeout;
         public DateTime TimeOut = DateTime.MaxValue;
@@ -307,17 +319,17 @@ public class CQueryTester
         }
         foreach (Query q in s_Queries)
         {
-            s_QueriesOutLogManager?.AddEntry($"Query_{q.Id} of \nType: {q.QType} \nResult: {q.Result} \nTimeTaken: {q.MsTimeTaken} ms");
+            s_QueriesOutLogManager?.AddEntry($"Query_{q.Id} of \nType: {q.QType} \nResult: {q.Result} \nTimeTaken: {q.MsTimeTaken} ms\nSemicolonSeparatedParameters: {q.SemicolonSeparatedParameters}");
         }
         SaveQueryResultsToCSV();
     }
 
     static private void SaveQueryResultsToCSV()
     {
-        string csv = "Id;Type;MsTimeout;MsTimeNextQuery;Result: -2:Timeout -3: Exception;MsTimeTaken\n";
+        string csv = "Id;Type;MsTimeout;MsTimeNextQuery;Result: -2:Timeout -3: Exception;MsTimeTaken;Parameter 1: Barcode;Parameter 2: PesoGramos/NumeroRampa;Parameter 3: LargoCM;Parameter 4: AnchoCM;Parameter 5: AltoCM\n";
         foreach (Query q in s_Queries)
         {
-            csv += $"{q.Id};{(int)q.QType}: {Enum.GetName(q.QType)};{q.MsTimeout};{q.MsTimeNextQuery};{q.Result};{q.MsTimeTaken}\n";
+            csv += $"{q.Id};{(int)q.QType}: {Enum.GetName(q.QType)};{q.MsTimeout};{q.MsTimeNextQuery};{q.Result};{q.MsTimeTaken};{q.SemicolonSeparatedParameters}\n";
         }
         string LogNameWithDate = logDir + "/" + DateTime.Now.ToString("yyyy-MM-dd hh_mm_ss_fff") + "_" + logFile + ".csv";
 
