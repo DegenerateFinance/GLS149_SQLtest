@@ -7,7 +7,6 @@ using System.Diagnostics;
 using System;
 using System.Collections.Generic;
 
-using GLS149_SQLtest.Models;
 using System.Data.Odbc;
 
 public partial class Form3 : Form
