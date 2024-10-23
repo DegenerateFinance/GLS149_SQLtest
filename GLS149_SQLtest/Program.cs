@@ -3,6 +3,9 @@ using Microsoft.EntityFrameworkCore;
 namespace GLS149_SQLtest;
 
 using GLS149_SQLtest.TestModels;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.EntityFrameworkCore.Metadata;
+
 internal static class Program
 {
     /// <summary>
@@ -96,20 +99,27 @@ internal static class Program
                 .GroupBy(x => new
                 {
                     // Ensure Dt3 has a value before using it
-                    RoundedDt3 = new DateTime(x.Dt3.Value.Year, x.Dt3.Value.Month, x.Dt3.Value.Day, x.Dt3.Value.Hour, x.Dt3.Value.Minute, 0)
+                    RoundedDt3 = new DateTime(x.Dt3.Value.Year, x.Dt3.Value.Month, x.Dt3.Value.Day, x.Dt3.Value.Hour, x.Dt3.Value.Minute, 0),
+                    ModeProperty2 = x.Property2
                 })
                 .Select(g => new
                 {
                     MaxProd30 = g.Max(x => x.property1),
-                    FechaLectura = g.Key
+                    ModeProperty2 = g.Key.ModeProperty2,
+                    SelectedDt = g.Key.RoundedDt3
                 })
                 .OrderByDescending(x => x.MaxProd30).Take(100).ToList();
 
-                DateTime fechaLectura = test3[0].FechaLectura.RoundedDt3;
+                DateTime fechaLectura = test3[0].SelectedDt;
+                string modeProperty2 = test3[0].ModeProperty2;
 
                 MessageBox.Show($"Max: {fechaLectura.ToString("yyyy-MM-dd HH:mm:ss.fff")} {test3[0].MaxProd30} ");
 
                 MessageBox.Show($"\n Time 1: {(select2 - select1).TotalMilliseconds} ms \n Time 2: {(DateTime.Now - select2).TotalMilliseconds} ms");
+
+                string? columnName = GetColumnName<GlobalTest>(context, nameof(GlobalTest.GlobalId));
+                MessageBox.Show($"Column Name: {columnName}");
+
 
             }
             catch (Exception ex)
@@ -127,6 +137,18 @@ internal static class Program
 
 
     }
+
+    static public string GetColumnName<TEntity>(DbContext context, string propertyName)
+    {
+        var entityType = context.Model.FindEntityType(typeof(TEntity)); // Get entity type from the model
+        var property = entityType.FindProperty(propertyName); // Get the property metadata
+
+        // Get the column name from the property metadata
+        var columnName = property.GetColumnName(StoreObjectIdentifier.Table(entityType.GetTableName(), entityType.GetSchema()));
+
+        return columnName ?? throw new InvalidOperationException($"No column found for property '{propertyName}'");
+    }
+
 }
 
 // dotnet ef dbcontext optimize --context Gls149TestContext --project GLS149_SQLtest --startup-project GLS149_SQLtest --output-dir MyCompiledModels --namespace MyCompiledModels
