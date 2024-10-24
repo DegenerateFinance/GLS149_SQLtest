@@ -5,6 +5,10 @@ namespace GLS149_SQLtest;
 using GLS149_SQLtest.TestModels;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
+using LogLib;
 
 internal static class Program
 {
@@ -28,6 +32,8 @@ internal static class Program
 
         using (Gls149TestContext context = new Gls149TestContext(connectionString))
         {
+            LogManager logger = new LogManager("logname", "logpath", 7);
+            context.SetLogger(logger.AddEntry);
             try
             {
                 context?.Database.SetCommandTimeout(1);
@@ -39,12 +45,13 @@ internal static class Program
                 }
                 if (context.Database.CanConnect())
                 {
-                    MessageBox.Show("Connected to database");
+                    Console.WriteLine("Connected to database");
                 }
+                
                 DateTime start = DateTime.Now;
-
                 GlobalTest test_obj = new GlobalTest() { property1 = 69, Property2 = "2", Dt3 = DateTime.Now };
                 context.GlobalTests.Add(test_obj);
+                context.SaveChanges();
 
                 DateTime end_q1 = DateTime.Now;
 
@@ -53,16 +60,18 @@ internal static class Program
                 context.SaveChanges();
 
 
-                MessageBox.Show($"Time 1: {(end_q1 - start).TotalMilliseconds} ms \n Time2 {(DateTime.Now - end_q1).TotalMilliseconds} ms");
-                MessageBox.Show("INSERTED, GlobalId: " + test_obj2.GlobalId);
+                Console.WriteLine($"Time 1: {(end_q1 - start).TotalMilliseconds} ms \n Time2 {(DateTime.Now - end_q1).TotalMilliseconds} ms");
+                Console.WriteLine("INSERTED, GlobalId: " + test_obj2.GlobalId);
 
+                
                 // COUNT WHERE property1 = "1"
                 int count = context.GlobalTests.Count(x => x.property1 == 1);
-
+                Console.WriteLine("Count: " + count);
+                
 
                 DateTime select1 = DateTime.Now;
                 // SELECT WHERE property1 = "1" LIMIT 100
-                List<GlobalTest> list = context.GlobalTests.Where(x => x.property1 == 1).Take(100).ToList();
+                List<GlobalTest> list = context.GlobalTests.Where(x => x.property1 == 1).OrderBy(x => x.GlobalId).Take(100).ToList();
 
 
                 DateTime select2 = DateTime.Now;
@@ -100,12 +109,11 @@ internal static class Program
                 {
                     // Ensure Dt3 has a value before using it
                     RoundedDt3 = new DateTime(x.Dt3.Value.Year, x.Dt3.Value.Month, x.Dt3.Value.Day, x.Dt3.Value.Hour, x.Dt3.Value.Minute, 0),
-                    ModeProperty2 = x.Property2
                 })
                 .Select(g => new
                 {
                     MaxProd30 = g.Max(x => x.property1),
-                    ModeProperty2 = g.Key.ModeProperty2,
+                    ModeProperty2 = g.Take(1).Select(x => x.Property2).FirstOrDefault(),
                     SelectedDt = g.Key.RoundedDt3
                 })
                 .OrderByDescending(x => x.MaxProd30).Take(100).ToList();
@@ -113,12 +121,12 @@ internal static class Program
                 DateTime fechaLectura = test3[0].SelectedDt;
                 string modeProperty2 = test3[0].ModeProperty2;
 
-                MessageBox.Show($"Max: {fechaLectura.ToString("yyyy-MM-dd HH:mm:ss.fff")} {test3[0].MaxProd30} ");
+                Console.WriteLine($"Max: {fechaLectura.ToString("yyyy-MM-dd HH:mm:ss.fff")} {test3[0].MaxProd30} ");
 
-                MessageBox.Show($"\n Time 1: {(select2 - select1).TotalMilliseconds} ms \n Time 2: {(DateTime.Now - select2).TotalMilliseconds} ms");
+                Console.WriteLine($"\n Time 1: {(select2 - select1).TotalMilliseconds} ms \n Time 2: {(DateTime.Now - select2).TotalMilliseconds} ms");
 
                 string? columnName = GetColumnName<GlobalTest>(context, nameof(GlobalTest.GlobalId));
-                MessageBox.Show($"Column Name: {columnName}");
+                Console.WriteLine($"Column Name: {columnName}");
 
 
             }
@@ -133,6 +141,7 @@ internal static class Program
                     MessageBox.Show("EXCEPTION: " + ex.Message);
                 }
             }
+            logger.FinalizeLogManager();
         }
 
 

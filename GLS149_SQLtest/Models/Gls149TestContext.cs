@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.Extensions.Logging;
 using Pomelo.EntityFrameworkCore.MySql.Scaffolding.Internal;
 
 namespace GLS149_SQLtest.TestModels;
@@ -8,13 +10,16 @@ namespace GLS149_SQLtest.TestModels;
 public partial class Gls149TestContext : DbContext
 {
     private string _connectionString;
+    private Action<string> _loggerAction;
     public Gls149TestContext(string connectionstring)
     {
         _connectionString = connectionstring;
+        SetLogger(Console.WriteLine);
     }
 public Gls149TestContext(DbContextOptions<Gls149TestContext> options)
         : base(options)
     {
+        SetLogger(Console.WriteLine);
     }
 
     public virtual DbSet<GlobalTest> GlobalTests { get; set; }
@@ -26,12 +31,20 @@ public Gls149TestContext(DbContextOptions<Gls149TestContext> options)
          if (!optionsBuilder.IsConfigured)
          {
              // Set the connection string - you need to specify it here
-             optionsBuilder.UseMySql(
+             optionsBuilder
+                .UseMySql(
                  _connectionString,
-                 new MySqlServerVersion(new Version(8, 0, 36))); // Specify the MySQL version you're using
+                 new MySqlServerVersion(new Version(8, 0, 36)))
+                .LogTo(_loggerAction, new[] { DbLoggerCategory.Database.Command.Name, }, LogLevel.Information);
+
+             optionsBuilder.EnableSensitiveDataLogging();
+            ; // Specify the MySQL version you're using
          }
     }
-
+    public void SetLogger(Action<string> loggerAction)
+    {
+        _loggerAction = loggerAction;
+    }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder

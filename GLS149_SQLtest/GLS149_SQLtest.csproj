@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Version>24.8.0.4</Version>
     <SourceRevisionId>build$([System.DateTime]::UtcNow.ToString(" yyyy-MM-dd HH:mm:ss.fff"))</SourceRevisionId>
-    <OutputType>WinExe</OutputType>
+    <OutputType>Exe</OutputType>
     <TargetFramework>net8.0-windows</TargetFramework>
     <Nullable>enable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
