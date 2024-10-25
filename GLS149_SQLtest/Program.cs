@@ -49,7 +49,7 @@ internal static class Program
                 }
                 
                 DateTime start = DateTime.Now;
-                GlobalTest test_obj = new GlobalTest() { property1 = 69, Property2 = "2", Dt3 = DateTime.Now };
+                GlobalTest test_obj = new GlobalTest() { GlobalId = 69, Property2 = "2", Dt3 = DateTime.Now };
                 context.GlobalTests.Add(test_obj);
                 context.SaveChanges();
 
@@ -160,8 +160,22 @@ internal static class Program
 
 }
 
-// dotnet ef dbcontext optimize --context Gls149TestContext --project GLS149_SQLtest --startup-project GLS149_SQLtest --output-dir MyCompiledModels --namespace MyCompiledModels
-
-// Scaffold-DbContext  "server=192.168.2.69;database=gls149_test;user=remote;password=remote;" Pomelo.EntityFrameworkCore.MySql -OutputDir MyScaffoldedModels -f
-
 // Scaffold-DbContext  "server=192.168.2.69;database=gls149_test;user=remote;password=remote;TrustServerCertificate=True;Encrypt=False;" Microsoft.EntityFrameworkCore.SqlServer -OutputDir MyScaffoldedModels -f
+
+//Scaffold-DbContext "server=192.168.2.69;database=gls149_test;user=root;password=root;" Pomelo.EntityFrameworkCore.MySql -OutputDir Models -f -namespace GLS149_SQLtest.TestModels
+
+//protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+//{
+//    if (!optionsBuilder.IsConfigured)
+//    {
+//        // Set the connection string - you need to specify it here
+//        optionsBuilder
+//           .UseMySql(
+//            _connectionString,
+//            new MySqlServerVersion(new Version(8, 0, 36)))
+//           .LogTo(_loggerAction, new[] { DbLoggerCategory.Database.Command.Name, }, LogLevel.Information);
+
+//        optionsBuilder.EnableSensitiveDataLogging();
+//        ; // Specify the MySQL version you're using
+//    }
+//}
