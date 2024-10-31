@@ -1,50 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Diagnostics;
-using Microsoft.Extensions.Logging;
-using Pomelo.EntityFrameworkCore.MySql.Scaffolding.Internal;
 
 namespace GLS149_SQLtest.TestModels;
 
 public partial class Gls149TestContext : DbContext
 {
-    private string _connectionString;
-    private Action<string> _loggerAction;
-    public Gls149TestContext(string connectionstring)
-    {
-        _connectionString = connectionstring;
-        SetLogger(Console.WriteLine);
-    }
-public Gls149TestContext(DbContextOptions<Gls149TestContext> options)
+    public Gls149TestContext(DbContextOptions<Gls149TestContext> options)
         : base(options)
     {
-        SetLogger(Console.WriteLine);
     }
 
     public virtual DbSet<GlobalTest> GlobalTests { get; set; }
 
     public virtual DbSet<Univerre> Univerres { get; set; }
 
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-    {
-         if (!optionsBuilder.IsConfigured)
-         {
-             // Set the connection string - you need to specify it here
-             optionsBuilder
-                .UseMySql(
-                 _connectionString,
-                 new MySqlServerVersion(new Version(8, 0, 36)))
-                .LogTo(_loggerAction, new[] { DbLoggerCategory.Database.Command.Name, }, LogLevel.Information);
-
-             optionsBuilder.EnableSensitiveDataLogging();
-            ; // Specify the MySQL version you're using
-         }
-    }
-    public void SetLogger(Action<string> loggerAction)
-    {
-        _loggerAction = loggerAction;
-    }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder
@@ -59,7 +29,7 @@ public Gls149TestContext(DbContextOptions<Gls149TestContext> options)
 
             entity.Property(e => e.GlobalId).HasColumnName("Global_id");
             entity.Property(e => e.Dt3).HasColumnType("datetime(3)");
-            entity.Property(e => e.property1).HasColumnName("property1");
+            entity.Property(e => e.Property1).HasColumnName("property1");
             entity.Property(e => e.Property2)
                 .HasMaxLength(45)
                 .HasColumnName("property2");

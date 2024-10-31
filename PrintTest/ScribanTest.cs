@@ -27,6 +27,12 @@ public partial class ScribanTest : Form
 
     private void ScribanTest_Load(object sender, EventArgs e)
     {
+        InvoiceForm InvoiceForm = new InvoiceForm();
+        InvoiceForm.TopLevel = false;
+        InvoiceForm.FormBorderStyle = FormBorderStyle.None;
+        panel1.Controls.Add(InvoiceForm);
+        InvoiceForm.Show();
+
         DgItems.Columns.Add(barcodeColumnName, "Barcode");
         DgItems.Columns.Add(nameColumnName, "Name");
         DgItems.Columns.Add(priceColumnName, "Price");

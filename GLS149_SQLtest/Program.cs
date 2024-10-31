@@ -55,7 +55,7 @@ internal static class Program
 
                 DateTime end_q1 = DateTime.Now;
 
-                GlobalTest test_obj2 = new GlobalTest() { property1 = 269, Property2 = "2", Dt3 = DateTime.Now };
+                GlobalTest test_obj2 = new GlobalTest() { Property1 = 269, Property2 = "2", Dt3 = DateTime.Now };
                 context.GlobalTests.Add(test_obj2);
                 context.SaveChanges();
 
@@ -64,27 +64,27 @@ internal static class Program
                 Console.WriteLine("INSERTED, GlobalId: " + test_obj2.GlobalId);
 
                 
-                // COUNT WHERE property1 = "1"
-                int count = context.GlobalTests.Count(x => x.property1 == 1);
+                // COUNT WHERE Property1 = "1"
+                int count = context.GlobalTests.Count(x => x.Property1 == 1);
                 Console.WriteLine("Count: " + count);
                 
 
                 DateTime select1 = DateTime.Now;
-                // SELECT WHERE property1 = "1" LIMIT 100
-                List<GlobalTest> list = context.GlobalTests.Where(x => x.property1 == 1).OrderBy(x => x.GlobalId).Take(100).ToList();
+                // SELECT WHERE Property1 = "1" LIMIT 100
+                List<GlobalTest> list = context.GlobalTests.Where(x => x.Property1 == 1).OrderBy(x => x.GlobalId).Take(100).ToList();
 
 
                 DateTime select2 = DateTime.Now;
 
-                // SELECT WHERE property1 = "1" AND Dt3 BETWEEN  ORDER BY Global_Id DESC LIMIT 1
-                GlobalTest test = context.GlobalTests.Where(x => x.property1 == 1).OrderByDescending(x => x.GlobalId).FirstOrDefault();
+                // SELECT WHERE Property1 = "1" AND Dt3 BETWEEN  ORDER BY Global_Id DESC LIMIT 1
+                GlobalTest test = context.GlobalTests.Where(x => x.Property1 == 1).OrderByDescending(x => x.GlobalId).FirstOrDefault();
 
-                // SELECT WHERE property1 = "1" AND Dt3 BETWEEN today and today-7(days) ORDER BY Global_Id DESC LIMIT 1
+                // SELECT WHERE Property1 = "1" AND Dt3 BETWEEN today and today-7(days) ORDER BY Global_Id DESC LIMIT 1
                 DateTime today = DateTime.Now;
                 DateTime lastWeek = today.AddDays(-7);
-                GlobalTest test2 = context.GlobalTests.Where(x => x.property1 == 1 && x.Dt3 >= lastWeek && x.Dt3 <= today).OrderByDescending(x => x.GlobalId).FirstOrDefault();
+                GlobalTest test2 = context.GlobalTests.Where(x => x.Property1 == 1 && x.Dt3 >= lastWeek && x.Dt3 <= today).OrderByDescending(x => x.GlobalId).FirstOrDefault();
 
-                // SELECT COUNT(dt3) WHERE property1 = "1" AND Dt3 BETWEEN today and today-7(days) GROUP BY dt3(minutes) ORDER BY Global_Id DESC LIMIT 1
+                // SELECT COUNT(dt3) WHERE Property1 = "1" AND Dt3 BETWEEN today and today-7(days) GROUP BY dt3(minutes) ORDER BY Global_Id DESC LIMIT 1
                 // We will round Dt3 to the nearest minute for grouping purposes
 
                 //var test3 = context.GlobalTests
@@ -98,7 +98,7 @@ internal static class Program
                 //})
                 //.Select(g => new
                 //{
-                //    MaxProd30 = g.Max(x => x.property1),
+                //    MaxProd30 = g.Max(x => x.Property1),
                 //    FechaLectura = g.Key
                 //})
                 //.OrderByDescending(x => x.MaxProd30).Take(100).ToList();
@@ -112,7 +112,7 @@ internal static class Program
                 })
                 .Select(g => new
                 {
-                    MaxProd30 = g.Max(x => x.property1),
+                    MaxProd30 = g.Max(x => x.Property1),
                     ModeProperty2 = g.Take(1).Select(x => x.Property2).FirstOrDefault(),
                     SelectedDt = g.Key.RoundedDt3
                 })
@@ -160,9 +160,9 @@ internal static class Program
 
 }
 
-// Scaffold-DbContext  "server=192.168.2.69;database=gls149_test;user=remote;password=remote;TrustServerCertificate=True;Encrypt=False;" Microsoft.EntityFrameworkCore.SqlServer -OutputDir MyScaffoldedModels -f
+// Scaffold-DbContext  "server=192.168.2.69;database=gls149_test;user=remote;password=remote;TrustServerCertificate=True;Encrypt=False;" Microsoft.EntityFrameworkCore.SqlServer -OutputDir MyScaffoldedModels -f -NoOnConfiguring 
 
-//Scaffold-DbContext "server=192.168.2.69;database=gls149_test;user=root;password=root;" Pomelo.EntityFrameworkCore.MySql -OutputDir Models -f -namespace GLS149_SQLtest.TestModels
+//Scaffold-DbContext "server=192.168.2.69;database=gls149_test;user=root;password=root;" Pomelo.EntityFrameworkCore.MySql -OutputDir Models -f -namespace GLS149_SQLtest.TestModels -NoOnConfiguring 
 
 //protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 //{

@@ -7,7 +7,7 @@ public partial class GlobalTest
 {
     public int GlobalId { get; set; }
 
-    public int? property1 { get; set; }
+    public int? Property1 { get; set; }
 
     public string? Property2 { get; set; }
 
